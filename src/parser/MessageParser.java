@@ -44,9 +44,16 @@ public class MessageParser {
         TransactionType finalType = applyModifiers(lower, primaryType);
 
         if (finalType == null) {
-            if (hasAny(lower, AMBIGUOUS_KEYS)) {
-                double amount = extractAmount(trimmed);
-                if (amount > 0) return new ParseResult(TransactionType.EXPENSE, amount, trimmed, extractCounterparty(trimmed), ParseResult.Confidence.LOW);
+            double amount = extractAmount(trimmed);
+            if (amount > 0) {
+                // Check for "I borrowed" — ambiguous in Nigerian English
+                if (lower.contains("i borrowed") || lower.contains("i borrow")) {
+                    return new ParseResult(TransactionType.DEBT, amount, trimmed, extractCounterparty(trimmed), ParseResult.Confidence.LOW);
+                }
+                // Check for other ambiguous keywords
+                if (hasAny(lower, AMBIGUOUS_KEYS)) {
+                    return new ParseResult(TransactionType.EXPENSE, amount, trimmed, extractCounterparty(trimmed), ParseResult.Confidence.LOW);
+                }
             }
             return ParseResult.noMatch();
         }
@@ -68,9 +75,10 @@ public class MessageParser {
         if (lower.contains("owes")) return TransactionType.DEBT;
 
         // === BORROWED FIX ===
-        // "I borrowed" = EXPENSE (you owe someone)
-        if (lower.contains("i borrowed") || lower.contains("i borrow")) return TransactionType.EXPENSE;
-        // "[Name] borrowed" = DEBT (they owe you) — must come AFTER the "I borrowed" check
+        // "I borrowed" is ambiguous in Nigerian English — could mean "I lent" (DEBT) or "I took a loan" (EXPENSE)
+        // Mark as null here, handle as LOW confidence in parse() method
+        if (lower.contains("i borrowed") || lower.contains("i borrow")) return null;
+        // "[Name] borrowed" = DEBT (they owe you)
         if (lower.contains("borrowed") || lower.contains("borrow")) return TransactionType.DEBT;
 
         // === LENT FIX ===

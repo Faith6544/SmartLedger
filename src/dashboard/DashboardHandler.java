@@ -57,11 +57,21 @@ public class DashboardHandler implements HttpHandler {
         double todaySupplies = transactionDAO.getTodayTotalByType(uid, TransactionType.SUPPLY);
 
         List<Transaction> recent = transactionDAO.getRecent(uid, 10);
+        int streak = transactionDAO.getStreak(uid);
 
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Overview"));
         h.append(HtmlTemplates.nav(token, "overview"));
         h.append("<div class='container'>");
+
+        // Greeting
+        h.append(HtmlTemplates.greeting(user.getUsername(), todaySales));
+
+        // Health indicator
+        h.append(HtmlTemplates.healthIndicator(sales, expenses, supplies));
+
+        // Streak
+        h.append(HtmlTemplates.streakBanner(streak));
 
         // Today's summary
         h.append("<div class='section'><h2>Today's Activity</h2>");

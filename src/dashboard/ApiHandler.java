@@ -87,6 +87,7 @@ public class ApiHandler implements HttpHandler {
         String amountStr = params.getOrDefault("amount", "0");
         String description = params.getOrDefault("description", "");
         String counterparty = params.getOrDefault("counterparty", "");
+        String guessedType = params.getOrDefault("guessed", "");
         if (counterparty.isEmpty()) counterparty = null;
 
         try {
@@ -96,8 +97,12 @@ public class ApiHandler implements HttpHandler {
             Transaction txn = new Transaction(user.getId(), type, amount, description, counterparty);
             transactionDAO.save(txn);
 
-            // Update the chat message to mark as transaction
             chatMessageDAO.save(new ChatMessage(user.getId(), description, true));
+
+            // Log correction if user changed the category
+            if (!guessedType.isEmpty() && !guessedType.equals(typeStr)) {
+                transactionDAO.logCorrection(description, guessedType, typeStr);
+            }
 
             sendJson(exchange, 200, "{\"success\":true,\"amountFormatted\":\"" + HtmlTemplates.formatAmount(amount) + "\"}");
         } catch (Exception e) {

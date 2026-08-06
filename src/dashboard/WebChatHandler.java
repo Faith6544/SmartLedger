@@ -94,18 +94,25 @@ public class WebChatHandler implements HttpHandler {
         h.append("  html+='</select><br>';\n");
 
         h.append("  html+='<div class=\"actions\">';\n");
-        h.append("  html+='<button class=\"confirm-btn\" onclick=\"confirmTxn(\\''+id+'\\',\\''+d.description.replace(/'/g,'')+'\\','+d.amount+',\\''+(d.counterparty||'')+'\\')\">'+(low?'Save':'Confirm')+'</button>';\n");
+        h.append("  html+='<button class=\"confirm-btn\" onclick=\"confirmTxn(\\''+id+'\\',\\''+d.description.replace(/'/g,'')+'\\','+d.amount+',\\''+(d.counterparty||'')+'\\',\\''+d.type+'\\')\">'+(low?'Save':'Confirm')+'</button>';\n");
         h.append("  html+='<button class=\"cancel-btn\" onclick=\"cancelTxn(\\''+id+'\\')\">'+'Cancel</button>';\n");
         h.append("  html+='</div></div>';\n");
         h.append("  addMsg(html,'');\n");
         h.append("}\n\n");
 
-        h.append("function confirmTxn(id,desc,amount,counterparty){\n");
+        h.append("function showToast(msg,type){var t=document.createElement('div');t.className='toast '+type;t.innerHTML=msg;document.body.appendChild(t);");
+        h.append("setTimeout(function(){t.classList.add('show');},50);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},400);},3000);}\n\n");
+
+        h.append("function confirmTxn(id,desc,amount,counterparty,originalType){\n");
         h.append("  var type=document.getElementById('cat-'+id).value;\n");
+        h.append("  var corrected=(originalType && type!==originalType);\n");
         h.append("  fetch('/api/confirm',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},\n");
-        h.append("    body:'type='+type+'&amount='+amount+'&description='+encodeURIComponent(desc)+'&counterparty='+encodeURIComponent(counterparty)+'&token='+TOKEN})\n");
+        h.append("    body:'type='+type+'&amount='+amount+'&description='+encodeURIComponent(desc)+'&counterparty='+encodeURIComponent(counterparty)+'&token='+TOKEN");
+        h.append("+(corrected?'&guessed='+originalType:'')");
+        h.append("})\n");
         h.append("  .then(r=>r.json()).then(d=>{\n");
         h.append("    document.getElementById(id).innerHTML='<span style=\"color:#2e7d32;\">Recorded '+type+': &#8358;'+d.amountFormatted+(counterparty?' ('+counterparty+')':'')+'</span>';\n");
+        h.append("    showToast(type+' recorded: &#8358;'+d.amountFormatted,'success');\n");
         h.append("  }).catch(e=>addMsg('Error saving: '+e,'system'));\n");
         h.append("}\n\n");
 

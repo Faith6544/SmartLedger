@@ -78,6 +78,7 @@ public class AuthHandler implements HttpHandler {
         h.append(HtmlTemplates.head(title));
         h.append("<div style='min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f5f5f5;'>");
         h.append("<div style='background:#fff;border-radius:12px;padding:40px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>");
+        h.append("<div style='text-align:center;margin-bottom:10px;'><img src='" + HtmlTemplates.LOGO_DATA + "' style='width:60px;height:60px;'></div>");
         h.append("<h1 style='color:#2e7d32;text-align:center;margin-bottom:5px;'>SmartLedger</h1>");
         h.append("<p style='color:#888;text-align:center;margin-bottom:30px;font-size:14px;'>Record-keeping made simple</p>");
 

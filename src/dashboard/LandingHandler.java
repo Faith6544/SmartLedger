@@ -104,7 +104,7 @@ public class LandingHandler implements HttpHandler {
 
         // Navbar
         "<div class='navbar'>" +
-        "<h1>SmartLedger</h1>" +
+        "<div style='display:flex;align-items:center;gap:8px;'><img src='" + HtmlTemplates.LOGO_DATA + "' style='width:32px;height:32px;'><h1>SmartLedger</h1></div>" +
         "<div>" +
         "<a href='/auth/login' class='nav-login'>Login</a>" +
         "<a href='/auth/signup' class='nav-signup'>Sign Up</a>" +

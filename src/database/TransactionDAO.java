@@ -315,4 +315,65 @@ public class TransactionDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return 0;
     }
+
+    /**
+     * Calculates the current recording streak (consecutive days with transactions, counting back from today).
+     */
+    public int getStreak(int userId) {
+        String sql = "SELECT DISTINCT DATE(created_at) as day FROM transactions WHERE user_id = ? ORDER BY day DESC LIMIT 60";
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+
+            java.util.List<java.time.LocalDate> days = new java.util.ArrayList<>();
+            while (rs.next()) days.add(rs.getDate("day").toLocalDate());
+
+            if (days.isEmpty()) return 0;
+
+            int streak = 0;
+            java.time.LocalDate expected = java.time.LocalDate.now();
+
+            for (java.time.LocalDate day : days) {
+                if (day.equals(expected)) {
+                    streak++;
+                    expected = expected.minusDays(1);
+                } else if (day.equals(expected.plusDays(1))) {
+                    // Today hasn't been recorded yet, start from yesterday
+                    if (streak == 0) {
+                        expected = expected.minusDays(1);
+                        if (day.equals(expected)) { streak++; expected = expected.minusDays(1); }
+                    } else break;
+                } else break;
+            }
+            return streak;
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    /**
+     * Logs a parse correction for learning.
+     */
+    public void logCorrection(String originalText, String guessedType, String correctedType) {
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            // Create table if not exists
+            conn.createStatement().execute(
+                "CREATE TABLE IF NOT EXISTS parse_corrections (" +
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "original_text TEXT, " +
+                "guessed_type VARCHAR(20), " +
+                "corrected_type VARCHAR(20), " +
+                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+            );
+            PreparedStatement stmt = conn.prepareStatement(
+                "INSERT INTO parse_corrections (original_text, guessed_type, corrected_type) VALUES (?, ?, ?)"
+            );
+            stmt.setString(1, originalText);
+            stmt.setString(2, guessedType);
+            stmt.setString(3, correctedType);
+            stmt.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
 }
