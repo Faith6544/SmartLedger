@@ -14,6 +14,7 @@ public class DashboardServer {
         server.createContext("/chat/", new WebChatHandler());
         server.createContext("/api/", new ApiHandler());
         server.createContext("/auth/", new AuthHandler());
+        server.createContext("/analysis/", new AnalysisHandler());
         server.setExecutor(null);
     }
 

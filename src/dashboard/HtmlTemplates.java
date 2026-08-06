@@ -14,9 +14,10 @@ public class HtmlTemplates {
             "<div><h1 class='logo'>SmartLedger</h1></div>" +
             "<nav>" +
             navLink("/dashboard/" + token, "Overview", active.equals("overview")) +
+            navLink("/chat/" + token, "Chat", active.equals("chat")) +
             navLink("/dashboard/" + token + "/transactions", "Transactions", active.equals("transactions")) +
             navLink("/dashboard/" + token + "/debts", "Debts", active.equals("debts")) +
-            navLink("/chat/" + token, "Chat", active.equals("chat")) +
+            navLink("/analysis/" + token, "Analysis", active.equals("analysis")) +
             "</nav></div></div>";
     }
 
@@ -150,5 +151,17 @@ public class HtmlTemplates {
         ".confirm-btn { background:#4CAF50; color:#fff; } .change-btn { background:#FF9800; color:#fff; } .cancel-btn { background:#f44336; color:#fff; }" +
         ".category-select { padding:8px; border:1px solid #ddd; border-radius:6px; font-size:13px; margin-top:8px; }" +
 
-        "@media(max-width:600px) { .cards { grid-template-columns:repeat(2,1fr); } .header { padding:10px 15px; } nav { gap:2px; } .nav-link { padding:6px 10px; font-size:12px; } .container { padding:15px 10px; } }";
+        ".fab{position:fixed;bottom:30px;right:30px;width:60px;height:60px;border-radius:50%;background:#4CAF50;color:#fff;font-size:28px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(76,175,80,0.4);display:flex;align-items:center;justify-content:center;text-decoration:none;z-index:99;transition:transform 0.2s;} .fab:hover{transform:scale(1.1);background:#43A047;}" +
+        ".advice-card{background:#fff;border-radius:10px;padding:20px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid #4CAF50;}" +
+        ".advice-card.warning{border-left-color:#FF9800;}" +
+        ".advice-card.danger{border-left-color:#f44336;}" +
+        ".advice-card h4{margin-bottom:5px;color:#333;font-size:15px;}" +
+        ".advice-card p{color:#666;font-size:13px;line-height:1.5;}" +
+        ".period-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:25px;}" +
+        ".period-btn{padding:8px 18px;border-radius:20px;text-decoration:none;font-size:13px;font-weight:500;border:1px solid #ddd;color:#666;background:#fff;}" +
+        ".period-btn.active{background:#4CAF50;color:#fff;border-color:#4CAF50;}" +
+        ".period-btn:hover{border-color:#4CAF50;}" +
+        ".chart-container{background:#fff;border-radius:10px;padding:20px;margin-bottom:25px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}" +
+        ".chart-container h3{color:#333;font-size:16px;margin-bottom:15px;}" +
+        "@media(max-width:600px) { .cards { grid-template-columns:repeat(2,1fr); } .header { padding:10px 15px; } nav { gap:2px; } .nav-link { padding:6px 10px; font-size:12px; } .container { padding:15px 10px; } .fab{bottom:20px;right:20px;width:50px;height:50px;font-size:24px;} }";
 }

@@ -211,4 +211,108 @@ public class TransactionDAO {
         txn.setCreatedAt(rs.getTimestamp("created_at"));
         return txn;
     }
+
+    // ===== ANALYSIS METHODS =====
+
+    /**
+     * Returns daily totals for a type within a date range.
+     * Map key = "2026-08-05", value = total amount
+     */
+    public java.util.LinkedHashMap<String, Double> getDailyTotals(int userId, TransactionType type, String from, String to) {
+        java.util.LinkedHashMap<String, Double> map = new java.util.LinkedHashMap<>();
+        String sql = "SELECT DATE(created_at) as day, SUM(amount) as total FROM transactions " +
+                     "WHERE user_id = ? AND type = ? AND DATE(created_at) BETWEEN ? AND ? " +
+                     "GROUP BY DATE(created_at) ORDER BY day";
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            stmt.setString(2, type.name());
+            stmt.setString(3, from);
+            stmt.setString(4, to);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("day"), rs.getDouble("total"));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return map;
+    }
+
+    /**
+     * Returns total for a type within a date range.
+     */
+    public double getPeriodTotal(int userId, TransactionType type, String from, String to) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions " +
+                     "WHERE user_id = ? AND type = ? AND DATE(created_at) BETWEEN ? AND ?";
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            stmt.setString(2, type.name());
+            stmt.setString(3, from);
+            stmt.setString(4, to);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getDouble("total");
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    /**
+     * Returns top debtors in a date range.
+     */
+    public java.util.LinkedHashMap<String, Double> getTopDebtors(int userId, String from, String to) {
+        java.util.LinkedHashMap<String, Double> map = new java.util.LinkedHashMap<>();
+        String sql = "SELECT COALESCE(counterparty, 'Unknown') as name, SUM(amount) as total FROM transactions " +
+                     "WHERE user_id = ? AND type = 'DEBT' AND DATE(created_at) BETWEEN ? AND ? " +
+                     "GROUP BY counterparty ORDER BY total DESC LIMIT 10";
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            stmt.setString(2, from);
+            stmt.setString(3, to);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("name"), rs.getDouble("total"));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return map;
+    }
+
+    /**
+     * Returns the best sales day in a date range.
+     */
+    public String[] getBestDay(int userId, String from, String to) {
+        String sql = "SELECT DATE(created_at) as day, SUM(amount) as total FROM transactions " +
+                     "WHERE user_id = ? AND type = 'SALE' AND DATE(created_at) BETWEEN ? AND ? " +
+                     "GROUP BY DATE(created_at) ORDER BY total DESC LIMIT 1";
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            stmt.setString(2, from);
+            stmt.setString(3, to);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return new String[]{rs.getString("day"), String.valueOf(rs.getDouble("total"))};
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
+
+    /**
+     * Count number of active days (days with at least one transaction).
+     */
+    public int getActiveDays(int userId, String from, String to) {
+        String sql = "SELECT COUNT(DISTINCT DATE(created_at)) as days FROM transactions " +
+                     "WHERE user_id = ? AND DATE(created_at) BETWEEN ? AND ?";
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, userId);
+            stmt.setString(2, from);
+            stmt.setString(3, to);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt("days");
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
 }

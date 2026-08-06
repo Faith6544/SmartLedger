@@ -100,6 +100,10 @@ public class DashboardHandler implements HttpHandler {
         h.append("</div>");
 
         h.append("</div>");
+
+        // FAB button
+        h.append("<a href='/chat/").append(token).append("' class='fab' title='Record a transaction'>+</a>");
+
         h.append(HtmlTemplates.footer());
         return h.toString();
     }
