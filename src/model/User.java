@@ -18,7 +18,6 @@ public class User {
         this.dashboardToken = UUID.randomUUID().toString().replace("-", "");
     }
 
-    // Constructor for loading from database
     public User(int id, String username, String passwordHash, String dashboardToken, Timestamp createdAt) {
         this.id = id;
         this.username = username;
@@ -45,13 +44,10 @@ public class User {
         return this.passwordHash.equals(hashPassword(password));
     }
 
-    // Getters
     public int getId() { return id; }
     public String getUsername() { return username; }
     public String getPasswordHash() { return passwordHash; }
     public String getDashboardToken() { return dashboardToken; }
     public Timestamp getCreatedAt() { return createdAt; }
-
-    // Setters
     public void setId(int id) { this.id = id; }
 }

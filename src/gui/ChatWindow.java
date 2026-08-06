@@ -5,14 +5,15 @@ import database.ChatMessageDAO;
 import database.TransactionDAO;
 import model.ChatMessage;
 import model.Transaction;
+import model.TransactionType;
 import model.User;
 import parser.MessageParser;
+import parser.ParseResult;
 import dashboard.DashboardServer;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -35,22 +36,18 @@ public class ChatWindow extends JFrame {
         this.transactionDAO = new TransactionDAO();
         this.chatMessageDAO = new ChatMessageDAO();
 
-        setTitle("SmartLedger — " + user.getUsername());
+        setTitle("SmartLedger - " + user.getUsername());
         setSize(550, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Start dashboard server
         startDashboard();
-
-        // Build UI
         buildUI();
 
-        // Welcome message
-        appendSystem("Welcome to SmartLedger, " + user.getUsername() + "! 🎉");
+        appendSystem("Welcome to SmartLedger, " + user.getUsername() + "!");
         appendSystem("Type your transactions naturally, or type \"help\" to see commands.");
-        appendSystem("Your dashboard: http://localhost:8080/dashboard/" + user.getDashboardToken());
-        appendSystem("─────────────────────────────────────");
+        appendSystem("Dashboard: http://localhost:8080/dashboard/" + user.getDashboardToken());
+        appendSystem("--------------------------------------------");
     }
 
     private void buildUI() {
@@ -61,7 +58,7 @@ public class ChatWindow extends JFrame {
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
         header.setBackground(new Color(25, 25, 25));
         header.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
-        JLabel headerLabel = new JLabel("SmartLedger — " + currentUser.getUsername());
+        JLabel headerLabel = new JLabel("SmartLedger - " + currentUser.getUsername());
         headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         headerLabel.setForeground(new Color(76, 175, 80));
         header.add(headerLabel);
@@ -73,10 +70,8 @@ public class ChatWindow extends JFrame {
         chatPane.setBackground(new Color(30, 30, 30));
         chatPane.setFont(new Font("SansSerif", Font.PLAIN, 14));
         doc = chatPane.getStyledDocument();
-
         JScrollPane scrollPane = new JScrollPane(chatPane);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Input panel
@@ -98,6 +93,8 @@ public class ChatWindow extends JFrame {
         sendBtn.setBackground(new Color(76, 175, 80));
         sendBtn.setForeground(Color.WHITE);
         sendBtn.setFocusPainted(false);
+        sendBtn.setBorderPainted(false);
+        sendBtn.setOpaque(true);
         sendBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
         sendBtn.setPreferredSize(new Dimension(70, 35));
 
@@ -105,10 +102,8 @@ public class ChatWindow extends JFrame {
         inputPanel.add(sendBtn, BorderLayout.EAST);
         mainPanel.add(inputPanel, BorderLayout.SOUTH);
 
-        // Send action
-        ActionListener sendAction = e -> processInput();
-        inputField.addActionListener(sendAction);
-        sendBtn.addActionListener(sendAction);
+        inputField.addActionListener(e -> processInput());
+        sendBtn.addActionListener(e -> processInput());
 
         add(mainPanel);
     }
@@ -116,44 +111,94 @@ public class ChatWindow extends JFrame {
     private void processInput() {
         String text = inputField.getText().trim();
         if (text.isEmpty()) return;
-
         inputField.setText("");
-
-        // Show user message
         appendUser(text);
 
         // Check if it's a command
         if (parser.isCommand(text)) {
             String response = commandHandler.handle(text, currentUser.getId(), currentUser.getDashboardToken());
             appendSystem(response);
-
-            // Save as chat message (not a transaction)
             chatMessageDAO.save(new ChatMessage(currentUser.getId(), text, false));
             return;
         }
 
-        // Try to parse as a transaction
-        Transaction txn = parser.parse(text, currentUser.getId());
+        // Parse the message
+        ParseResult result = parser.parse(text);
 
-        if (txn != null) {
-            // Save the transaction
-            transactionDAO.save(txn);
-
-            // Save the chat message (marked as transaction)
-            chatMessageDAO.save(new ChatMessage(currentUser.getId(), text, true));
-
-            // Confirm
-            String confirm = String.format("✅ Recorded %s: ₦%,.2f", txn.getType(), txn.getAmount());
-            if (txn.getCounterparty() != null) {
-                confirm += " (" + txn.getCounterparty() + ")";
-            }
-            appendSystem(confirm);
-
-        } else {
-            // Not a transaction — save as chat message
+        if (!result.isTransaction()) {
+            // Not a transaction — save as chat
             chatMessageDAO.save(new ChatMessage(currentUser.getId(), text, false));
-            appendSystem("💬 Got it. (Not recorded as a transaction)");
+            appendSystem("Got it. (Not recorded as a transaction)");
+            return;
         }
+
+        // LOW confidence — ask user to pick category
+        if (result.getConfidence() == ParseResult.Confidence.LOW) {
+            showCategoryPicker(text, result);
+            return;
+        }
+
+        // HIGH confidence — show confirmation
+        showConfirmation(text, result);
+    }
+
+    private void showConfirmation(String rawText, ParseResult result) {
+        String message = String.format(
+            "Category: %s\nAmount: ₦%,.2f\nDescription: %s%s\n\nIs this correct?",
+            result.getType(),
+            result.getAmount(),
+            rawText,
+            result.getCounterparty() != null ? "\nWho: " + result.getCounterparty() : ""
+        );
+
+        String[] options = {"Confirm", "Change Category", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(this, message, "Confirm Transaction",
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+        if (choice == 0) {
+            // Confirm — save as is
+            saveTransaction(result, rawText);
+        } else if (choice == 1) {
+            // Change category
+            showCategoryPicker(rawText, result);
+        } else {
+            // Cancel
+            chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, false));
+            appendSystem("Transaction cancelled.");
+        }
+    }
+
+    private void showCategoryPicker(String rawText, ParseResult result) {
+        TransactionType[] types = TransactionType.values();
+        String[] typeNames = new String[types.length];
+        for (int i = 0; i < types.length; i++) typeNames[i] = types[i].name();
+
+        String message = String.format("Amount: ₦%,.2f\nMessage: %s\n\nSelect the correct category:",
+            result.getAmount(), rawText);
+
+        String picked = (String) JOptionPane.showInputDialog(this, message, "Select Category",
+            JOptionPane.QUESTION_MESSAGE, null, typeNames,
+            result.getType() != null ? result.getType().name() : typeNames[0]);
+
+        if (picked != null) {
+            result.setType(TransactionType.valueOf(picked));
+            result.setConfidence(ParseResult.Confidence.HIGH);
+            saveTransaction(result, rawText);
+        } else {
+            chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, false));
+            appendSystem("Transaction cancelled.");
+        }
+    }
+
+    private void saveTransaction(ParseResult result, String rawText) {
+        Transaction txn = new Transaction(currentUser.getId(), result.getType(),
+            result.getAmount(), rawText, result.getCounterparty());
+        transactionDAO.save(txn);
+        chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, true));
+
+        String confirm = String.format("Recorded %s: ₦%,.2f", result.getType(), result.getAmount());
+        if (result.getCounterparty() != null) confirm += " (" + result.getCounterparty() + ")";
+        appendSystem(confirm);
     }
 
     private void appendUser(String text) {
@@ -175,11 +220,8 @@ public class ChatWindow extends JFrame {
         StyleConstants.setFontSize(attrs, 14);
         try {
             doc.insertString(doc.getLength(), text, attrs);
-            // Auto-scroll to bottom
             chatPane.setCaretPosition(doc.getLength());
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
+        } catch (BadLocationException e) { e.printStackTrace(); }
     }
 
     private void startDashboard() {

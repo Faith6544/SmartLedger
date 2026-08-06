@@ -10,151 +10,247 @@ import model.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 public class DashboardHandler implements HttpHandler {
 
     private UserDAO userDAO = new UserDAO();
     private TransactionDAO transactionDAO = new TransactionDAO();
-    private ChatMessageDAO chatMessageDAO = new ChatMessageDAO();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        // Extract token from URL: /dashboard/{token}
         String path = exchange.getRequestURI().getPath();
-        String token = path.replace("/dashboard/", "").replace("/", "");
+        String[] parts = path.split("/");
+        // /dashboard/{token} or /dashboard/{token}/transactions or /dashboard/{token}/debts
 
+        if (parts.length < 3) { send(exchange, 404, "Not found"); return; }
+
+        String token = parts[2];
         User user = userDAO.getUserByToken(token);
-        if (user == null) {
-            String error = "<html><body style='font-family:sans-serif;text-align:center;padding:50px;'>" +
-                "<h1>404</h1><p>Dashboard not found. Check your link.</p></body></html>";
-            sendResponse(exchange, 404, error);
-            return;
+        if (user == null) { send(exchange, 404, notFoundPage()); return; }
+
+        String page = parts.length > 3 ? parts[3] : "overview";
+        String query = exchange.getRequestURI().getQuery();
+
+        String html;
+        switch (page) {
+            case "transactions": html = transactionsPage(user, token, query); break;
+            case "debts": html = debtsPage(user, token); break;
+            default: html = overviewPage(user, token); break;
         }
 
-        // Build the dashboard HTML
-        String html = buildDashboard(user);
-        sendResponse(exchange, 200, html);
+        send(exchange, 200, html);
     }
 
-    private String buildDashboard(User user) {
-        int userId = user.getId();
+    // ===== OVERVIEW PAGE =====
+    private String overviewPage(User user, String token) {
+        int uid = user.getId();
+        double sales = transactionDAO.getTotalByType(uid, TransactionType.SALE);
+        double expenses = transactionDAO.getTotalByType(uid, TransactionType.EXPENSE);
+        double supplies = transactionDAO.getTotalByType(uid, TransactionType.SUPPLY);
+        double debts = transactionDAO.getTotalByType(uid, TransactionType.DEBT);
+        double payments = transactionDAO.getTotalByType(uid, TransactionType.PAYMENT);
+        double profit = sales - expenses - supplies;
 
-        // Get totals
-        double totalSales = transactionDAO.getTotalByType(userId, TransactionType.SALE);
-        double totalExpenses = transactionDAO.getTotalByType(userId, TransactionType.EXPENSE);
-        double totalSupplies = transactionDAO.getTotalByType(userId, TransactionType.SUPPLY);
-        double totalDebts = transactionDAO.getTotalByType(userId, TransactionType.DEBT);
-        double totalPayments = transactionDAO.getTotalByType(userId, TransactionType.PAYMENT);
-        double profit = totalSales - totalExpenses - totalSupplies;
+        double todaySales = transactionDAO.getTodayTotalByType(uid, TransactionType.SALE);
+        double todayExpenses = transactionDAO.getTodayTotalByType(uid, TransactionType.EXPENSE);
+        double todaySupplies = transactionDAO.getTodayTotalByType(uid, TransactionType.SUPPLY);
 
-        // Get all transactions
-        List<Transaction> transactions = transactionDAO.getAllByUser(userId);
-        List<ChatMessage> chatMessages = chatMessageDAO.getAllByUser(userId);
+        List<Transaction> recent = transactionDAO.getRecent(uid, 10);
 
-        StringBuilder html = new StringBuilder();
-        html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
-        html.append("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
-        html.append("<title>SmartLedger — ").append(user.getUsername()).append("</title>");
-        html.append("<style>");
-        html.append("* { margin: 0; padding: 0; box-sizing: border-box; }");
-        html.append("body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 20px; }");
-        html.append(".container { max-width: 900px; margin: 0 auto; }");
-        html.append("h1 { color: #4CAF50; font-size: 28px; margin-bottom: 5px; }");
-        html.append(".subtitle { color: #888; margin-bottom: 30px; }");
-        html.append(".cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 30px; }");
-        html.append(".card { background: #16213e; border-radius: 12px; padding: 20px; text-align: center; }");
-        html.append(".card h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }");
-        html.append(".card .value { font-size: 22px; font-weight: bold; }");
-        html.append(".card.sales .value { color: #4CAF50; }");
-        html.append(".card.expenses .value { color: #f44336; }");
-        html.append(".card.supplies .value { color: #FF9800; }");
-        html.append(".card.debts .value { color: #e91e63; }");
-        html.append(".card.payments .value { color: #2196F3; }");
-        html.append(".card.profit .value { color: ").append(profit >= 0 ? "#4CAF50" : "#f44336").append("; }");
-        html.append("table { width: 100%; border-collapse: collapse; margin-top: 15px; }");
-        html.append("th { background: #16213e; color: #4CAF50; padding: 12px 15px; text-align: left; font-size: 13px; text-transform: uppercase; }");
-        html.append("td { padding: 10px 15px; border-bottom: 1px solid #2a2a4a; font-size: 14px; }");
-        html.append("tr:hover { background: #16213e; }");
-        html.append(".type-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; }");
-        html.append(".type-SALE { background: #1b5e20; color: #4CAF50; }");
-        html.append(".type-EXPENSE { background: #b71c1c33; color: #f44336; }");
-        html.append(".type-SUPPLY { background: #e6510033; color: #FF9800; }");
-        html.append(".type-DEBT { background: #88006633; color: #e91e63; }");
-        html.append(".type-PAYMENT { background: #0d47a133; color: #2196F3; }");
-        html.append(".section { background: #0f3460; border-radius: 12px; padding: 20px; margin-bottom: 25px; }");
-        html.append(".section h2 { color: #4CAF50; font-size: 18px; margin-bottom: 10px; }");
-        html.append(".chat-msg { padding: 8px 12px; margin: 5px 0; background: #16213e; border-radius: 8px; font-size: 13px; }");
-        html.append(".chat-time { color: #666; font-size: 11px; }");
-        html.append("</style></head><body>");
+        StringBuilder h = new StringBuilder();
+        h.append(HtmlTemplates.head("Overview"));
+        h.append(HtmlTemplates.nav(token, "overview"));
+        h.append("<div class='container'>");
 
-        html.append("<div class='container'>");
-        html.append("<h1>SmartLedger</h1>");
-        html.append("<p class='subtitle'>Dashboard for ").append(user.getUsername()).append("</p>");
+        // Today's summary
+        h.append("<div class='section'><h2>Today's Activity</h2>");
+        h.append("<div class='cards' style='margin-bottom:0;'>");
+        h.append(HtmlTemplates.card("Today's Sales", todaySales, "sales"));
+        h.append(HtmlTemplates.card("Today's Expenses", todayExpenses, "expenses"));
+        h.append(HtmlTemplates.card("Today's Supplies", todaySupplies, "supplies"));
+        h.append("</div></div>");
 
-        // Summary cards
-        html.append("<div class='cards'>");
-        html.append(card("Sales", totalSales, "sales"));
-        html.append(card("Expenses", totalExpenses, "expenses"));
-        html.append(card("Supplies", totalSupplies, "supplies"));
-        html.append(card("Debts Owed", totalDebts, "debts"));
-        html.append(card("Payments In", totalPayments, "payments"));
-        html.append(card("Profit", profit, "profit"));
-        html.append("</div>");
+        // All-time summary
+        h.append("<div class='cards'>");
+        h.append(HtmlTemplates.card("Total Sales", sales, "sales"));
+        h.append(HtmlTemplates.card("Total Expenses", expenses, "expenses"));
+        h.append(HtmlTemplates.card("Total Supplies", supplies, "supplies"));
+        h.append(HtmlTemplates.card("Debts Owed", debts, "debts"));
+        h.append(HtmlTemplates.card("Payments In", payments, "payments"));
+        String profitClass = profit >= 0 ? "profit" : "profit negative";
+        h.append("<div class='card ").append(profitClass).append("'><h3>Profit</h3>");
+        h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
+        h.append("</div>");
 
-        // Transactions table
-        html.append("<div class='section'>");
-        html.append("<h2>All Transactions</h2>");
+        // Chart
+        h.append("<div class='section'><h2>At a Glance</h2>");
+        h.append(HtmlTemplates.barChart(sales, expenses, supplies, debts, payments));
+        h.append("</div>");
+
+        // Recent transactions
+        h.append("<div class='section'><h2>Recent Transactions</h2>");
+        if (recent.isEmpty()) {
+            h.append("<p class='empty'>No transactions yet. Start recording in the chat!</p>");
+        } else {
+            h.append(transactionTable(recent, false, token));
+        }
+        h.append("<div style='margin-top:15px;'><a href='/dashboard/").append(token)
+         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'>View All Transactions</a></div>");
+        h.append("</div>");
+
+        h.append("</div>");
+        h.append(HtmlTemplates.footer());
+        return h.toString();
+    }
+
+    // ===== TRANSACTIONS PAGE =====
+    private String transactionsPage(User user, String token, String query) {
+        // Parse filters from query string
+        String typeFilter = null, fromDate = null, toDate = null;
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] kv = param.split("=", 2);
+                if (kv.length == 2) {
+                    switch (kv[0]) {
+                        case "type": typeFilter = kv[1]; break;
+                        case "from": fromDate = kv[1]; break;
+                        case "to": toDate = kv[1]; break;
+                    }
+                }
+            }
+        }
+
+        List<Transaction> transactions = transactionDAO.getFiltered(user.getId(), typeFilter, fromDate, toDate);
+
+        StringBuilder h = new StringBuilder();
+        h.append(HtmlTemplates.head("Transactions"));
+        h.append(HtmlTemplates.nav(token, "transactions"));
+        h.append("<div class='container'>");
+
+        h.append("<div class='section'><h2>All Transactions</h2>");
+
+        // Filter bar
+        h.append("<form class='filter-bar' method='GET' action='/dashboard/").append(token).append("/transactions'>");
+        h.append("<select name='type'><option value='ALL'>All Types</option>");
+        for (TransactionType t : TransactionType.values()) {
+            String sel = t.name().equals(typeFilter) ? " selected" : "";
+            h.append("<option value='").append(t.name()).append("'").append(sel).append(">").append(t.name()).append("</option>");
+        }
+        h.append("</select>");
+        h.append("<input type='date' name='from' value='").append(fromDate != null ? fromDate : "").append("' placeholder='From'>");
+        h.append("<input type='date' name='to' value='").append(toDate != null ? toDate : "").append("' placeholder='To'>");
+        h.append("<button type='submit' class='btn btn-primary' style='padding:8px 16px;'>Filter</button>");
+        h.append("<a href='/dashboard/").append(token).append("/transactions' style='padding:8px;color:#666;text-decoration:none;'>Clear</a>");
+        h.append("</form>");
+
         if (transactions.isEmpty()) {
-            html.append("<p style='color:#888;'>No transactions yet. Start typing in the chat!</p>");
+            h.append("<p class='empty'>No transactions match your filters.</p>");
         } else {
-            html.append("<table><tr><th>Type</th><th>Amount</th><th>Description</th><th>Who</th><th>Date</th></tr>");
-            for (Transaction t : transactions) {
-                html.append("<tr>");
-                html.append("<td><span class='type-badge type-").append(t.getType()).append("'>").append(t.getType()).append("</span></td>");
-                html.append("<td>₦").append(String.format("%,.2f", t.getAmount())).append("</td>");
-                html.append("<td>").append(escapeHtml(t.getDescription())).append("</td>");
-                html.append("<td>").append(t.getCounterparty() != null ? escapeHtml(t.getCounterparty()) : "—").append("</td>");
-                html.append("<td>").append(t.getCreatedAt() != null ? t.getCreatedAt().toString().substring(0, 16) : "—").append("</td>");
-                html.append("</tr>");
-            }
-            html.append("</table>");
+            h.append(transactionTable(transactions, true, token));
         }
-        html.append("</div>");
+        h.append("</div></div>");
 
-        // Chat history
-        html.append("<div class='section'>");
-        html.append("<h2>Chat History</h2>");
-        if (chatMessages.isEmpty()) {
-            html.append("<p style='color:#888;'>No messages yet.</p>");
+        // JavaScript for edit/delete
+        h.append("<script>");
+        h.append("function deleteTxn(id){if(!confirm('Delete this transaction?'))return;");
+        h.append("fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},");
+        h.append("body:'id='+id+'&token=").append(token).append("'}).then(r=>r.json()).then(d=>{if(d.success)document.getElementById('row-'+id).remove();});}\n");
+
+        h.append("function editTxn(id){var sel=document.getElementById('edit-'+id);");
+        h.append("var newType=sel.value;");
+        h.append("fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},");
+        h.append("body:'id='+id+'&type='+newType+'&token=").append(token).append("'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}\n");
+        h.append("</script>");
+
+        h.append(HtmlTemplates.footer());
+        return h.toString();
+    }
+
+    // ===== DEBTS PAGE =====
+    private String debtsPage(User user, String token) {
+        Map<String, double[]> debtSummary = transactionDAO.getDebtSummary(user.getId());
+
+        StringBuilder h = new StringBuilder();
+        h.append(HtmlTemplates.head("Debts"));
+        h.append(HtmlTemplates.nav(token, "debts"));
+        h.append("<div class='container'>");
+
+        h.append("<div class='section'><h2>Debtor Summary</h2>");
+
+        if (debtSummary.isEmpty()) {
+            h.append("<p class='empty'>No debts recorded yet.</p>");
         } else {
-            for (ChatMessage msg : chatMessages) {
-                String icon = msg.isTransaction() ? "💰" : "💬";
-                String time = msg.getCreatedAt() != null ? msg.getCreatedAt().toString().substring(0, 16) : "";
-                html.append("<div class='chat-msg'>")
-                    .append(icon).append(" ").append(escapeHtml(msg.getRawText()))
-                    .append(" <span class='chat-time'>").append(time).append("</span>")
-                    .append("</div>");
+            double totalRemaining = 0;
+            for (Map.Entry<String, double[]> entry : debtSummary.entrySet()) {
+                String name = entry.getKey();
+                double[] vals = entry.getValue(); // [owed, paid, remaining]
+                totalRemaining += vals[2];
+
+                h.append("<div class='debt-card'>");
+                h.append("<h3>").append(HtmlTemplates.escapeHtml(name)).append("</h3>");
+                h.append("<div class='amounts'>");
+                h.append("<span class='owed'>Owed: &#8358;").append(HtmlTemplates.formatAmount(vals[0])).append("</span>");
+                h.append("<span class='paid'>Paid: &#8358;").append(HtmlTemplates.formatAmount(vals[1])).append("</span>");
+                h.append("<span class='remaining'>Remaining: &#8358;").append(HtmlTemplates.formatAmount(vals[2])).append("</span>");
+                h.append("</div></div>");
             }
+
+            h.append("<div style='margin-top:20px;padding:15px;background:#fce4ec;border-radius:8px;'>");
+            h.append("<strong style='color:#ad1457;'>Total Outstanding: &#8358;").append(HtmlTemplates.formatAmount(totalRemaining)).append("</strong>");
+            h.append("</div>");
         }
-        html.append("</div>");
 
-        html.append("</div></body></html>");
-        return html.toString();
+        h.append("</div></div>");
+        h.append(HtmlTemplates.footer());
+        return h.toString();
     }
 
-    private String card(String title, double value, String cssClass) {
-        return "<div class='card " + cssClass + "'>" +
-            "<h3>" + title + "</h3>" +
-            "<div class='value'>₦" + String.format("%,.2f", value) + "</div>" +
-            "</div>";
+    // ===== HELPERS =====
+
+    private String transactionTable(List<Transaction> transactions, boolean showActions, String token) {
+        StringBuilder t = new StringBuilder();
+        t.append("<table><tr><th>Type</th><th>Amount</th><th>Description</th><th>Who</th><th>Date</th>");
+        if (showActions) t.append("<th>Actions</th>");
+        t.append("</tr>");
+
+        for (Transaction txn : transactions) {
+            t.append("<tr id='row-").append(txn.getId()).append("'>");
+            t.append("<td>").append(HtmlTemplates.badge(txn.getType().name())).append("</td>");
+            t.append("<td style='font-weight:600;'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</td>");
+            t.append("<td>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</td>");
+            t.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "—").append("</td>");
+            t.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "—").append("</td>");
+
+            if (showActions) {
+                t.append("<td>");
+                // Edit dropdown
+                t.append("<select id='edit-").append(txn.getId()).append("' class='category-select' onchange='editTxn(").append(txn.getId()).append(")'>");
+                for (TransactionType type : TransactionType.values()) {
+                    String sel = type == txn.getType() ? " selected" : "";
+                    t.append("<option value='").append(type.name()).append("'").append(sel).append(">").append(type.name()).append("</option>");
+                }
+                t.append("</select> ");
+                // Delete button
+                t.append("<button class='btn btn-danger' onclick='deleteTxn(").append(txn.getId()).append(")'>Delete</button>");
+                t.append("</td>");
+            }
+            t.append("</tr>");
+        }
+        t.append("</table>");
+        return t.toString();
     }
 
-    private String escapeHtml(String text) {
-        if (text == null) return "";
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    private String notFoundPage() {
+        return HtmlTemplates.head("Not Found") +
+            "<div style='text-align:center;padding:80px 20px;'>" +
+            "<h1 style='color:#ccc;font-size:60px;'>404</h1>" +
+            "<p style='color:#888;'>Dashboard not found. Check your link.</p>" +
+            "<a href='/auth/login' class='btn btn-primary' style='text-decoration:none;margin-top:20px;display:inline-block;'>Go to Login</a>" +
+            "</div>" + HtmlTemplates.footer();
     }
 
-    private void sendResponse(HttpExchange exchange, int code, String html) throws IOException {
+    private void send(HttpExchange exchange, int code, String html) throws IOException {
         byte[] bytes = html.getBytes("UTF-8");
         exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
         exchange.sendResponseHeaders(code, bytes.length);

@@ -19,7 +19,6 @@ public class Transaction {
         this.counterparty = counterparty;
     }
 
-    // Getters
     public int getId() { return id; }
     public int getUserId() { return userId; }
     public TransactionType getType() { return type; }
@@ -28,8 +27,8 @@ public class Transaction {
     public String getCounterparty() { return counterparty; }
     public Timestamp getCreatedAt() { return createdAt; }
 
-    // Setters
     public void setId(int id) { this.id = id; }
+    public void setType(TransactionType type) { this.type = type; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 
     @Override

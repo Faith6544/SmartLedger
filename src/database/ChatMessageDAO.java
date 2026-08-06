@@ -16,14 +16,9 @@ public class ChatMessageDAO {
             stmt.setString(2, msg.getRawText());
             stmt.setBoolean(3, msg.isTransaction());
             stmt.executeUpdate();
-
             ResultSet keys = stmt.getGeneratedKeys();
-            if (keys.next()) {
-                msg.setId(keys.getInt(1));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            if (keys.next()) msg.setId(keys.getInt(1));
+        } catch (SQLException e) { e.printStackTrace(); }
     }
 
     public List<ChatMessage> getAllByUser(int userId) {
@@ -34,20 +29,13 @@ public class ChatMessageDAO {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
-
             while (rs.next()) {
-                ChatMessage msg = new ChatMessage(
-                    rs.getInt("user_id"),
-                    rs.getString("raw_text"),
-                    rs.getBoolean("is_transaction")
-                );
+                ChatMessage msg = new ChatMessage(rs.getInt("user_id"), rs.getString("raw_text"), rs.getBoolean("is_transaction"));
                 msg.setId(rs.getInt("id"));
                 msg.setCreatedAt(rs.getTimestamp("created_at"));
                 list.add(msg);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 }

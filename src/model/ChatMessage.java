@@ -15,14 +15,12 @@ public class ChatMessage {
         this.isTransaction = isTransaction;
     }
 
-    // Getters
     public int getId() { return id; }
     public int getUserId() { return userId; }
     public String getRawText() { return rawText; }
     public boolean isTransaction() { return isTransaction; }
     public Timestamp getCreatedAt() { return createdAt; }
 
-    // Setters
     public void setId(int id) { this.id = id; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 }

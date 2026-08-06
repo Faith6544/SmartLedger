@@ -10,6 +10,9 @@ public class DashboardServer {
     public DashboardServer(int port) throws Exception {
         server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/dashboard/", new DashboardHandler());
+        server.createContext("/chat/", new WebChatHandler());
+        server.createContext("/api/", new ApiHandler());
+        server.createContext("/auth/", new AuthHandler());
         server.setExecutor(null);
     }
 

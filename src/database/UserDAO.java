@@ -14,18 +14,10 @@ public class UserDAO {
             stmt.setString(2, user.getPasswordHash());
             stmt.setString(3, user.getDashboardToken());
             stmt.executeUpdate();
-
             ResultSet keys = stmt.getGeneratedKeys();
-            if (keys.next()) {
-                user.setId(keys.getInt(1));
-            }
+            if (keys.next()) user.setId(keys.getInt(1));
             return true;
         } catch (SQLException e) {
-            if (e.getMessage().contains("Duplicate")) {
-                System.out.println("Username already exists.");
-            } else {
-                e.printStackTrace();
-            }
             return false;
         }
     }
@@ -37,22 +29,12 @@ public class UserDAO {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
-                User user = new User(
-                    rs.getInt("id"),
-                    rs.getString("username"),
-                    rs.getString("password_hash"),
-                    rs.getString("dashboard_token"),
-                    rs.getTimestamp("created_at")
-                );
-                if (user.checkPassword(password)) {
-                    return user;
-                }
+                User user = new User(rs.getInt("id"), rs.getString("username"),
+                    rs.getString("password_hash"), rs.getString("dashboard_token"), rs.getTimestamp("created_at"));
+                if (user.checkPassword(password)) return user;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
@@ -63,19 +45,11 @@ public class UserDAO {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, token);
             ResultSet rs = stmt.executeQuery();
-
             if (rs.next()) {
-                return new User(
-                    rs.getInt("id"),
-                    rs.getString("username"),
-                    rs.getString("password_hash"),
-                    rs.getString("dashboard_token"),
-                    rs.getTimestamp("created_at")
-                );
+                return new User(rs.getInt("id"), rs.getString("username"),
+                    rs.getString("password_hash"), rs.getString("dashboard_token"), rs.getTimestamp("created_at"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 }
