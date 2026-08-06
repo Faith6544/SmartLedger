@@ -56,7 +56,7 @@ public class AuthHandler implements HttpHandler {
             return;
         }
 
-        User user = new User(username, password);
+        User user = new User(username, password, params.getOrDefault("business_name", ""));
         if (userDAO.createUser(user)) {
             exchange.getResponseHeaders().set("Location", "/auth/login");
             exchange.sendResponseHeaders(302, -1);
@@ -91,7 +91,12 @@ public class AuthHandler implements HttpHandler {
         h.append("<label style='font-size:13px;color:#666;font-weight:500;'>Username</label>");
         h.append("<input name='username' type='text' required style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 15px;'>");
         h.append("<label style='font-size:13px;color:#666;font-weight:500;'>Password</label>");
-        h.append("<input name='password' type='password' required style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 25px;'>");
+        h.append("<input name='password' type='password' required style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 15px;'>");
+        if (action.contains("signup")) {
+            h.append("<label style='font-size:13px;color:#666;font-weight:500;'>Business Name <span style='color:#aaa;'>(optional)</span></label>");
+            h.append("<input name='business_name' type='text' placeholder='e.g. Mama Tope Provisions' style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 15px;'>");
+        }
+        h.append("<div style='height:10px;'></div>");
         h.append("<button type='submit' style='width:100%;padding:12px;background:#4CAF50;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;'>")
          .append(btnText).append("</button>");
         h.append("</form>");

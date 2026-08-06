@@ -15,15 +15,14 @@ public class DashboardServer {
         server.createContext("/api/", new ApiHandler());
         server.createContext("/auth/", new AuthHandler());
         server.createContext("/analysis/", new AnalysisHandler());
+        server.createContext("/report/", new ReportHandler());
         server.setExecutor(null);
     }
 
     public void start() {
         server.start();
-        System.out.println("Dashboard server running at http://localhost:8080/");
+        System.out.println("SmartLedger running at http://localhost:8080/");
     }
 
-    public void stop() {
-        server.stop(0);
-    }
+    public void stop() { server.stop(0); }
 }

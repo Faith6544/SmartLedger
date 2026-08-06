@@ -105,7 +105,7 @@ public class AnalysisHandler implements HttpHandler {
 
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Analysis"));
-        h.append(HtmlTemplates.nav(token, "analysis"));
+        h.append(HtmlTemplates.fullNav(token, "analysis", user.getBusinessName()));
         h.append("<div class='container'>");
 
         // Title
@@ -146,11 +146,13 @@ public class AnalysisHandler implements HttpHandler {
         h.append(buildDailyChart(dailySales, dailyExpenses, from, to));
         h.append("</div>");
 
-        // Category breakdown (horizontal bars)
-        h.append("<div class='chart-container'>");
+        // Category breakdown + Pie chart side by side
+        h.append("<div class='chart-container anim-on-scroll'>");
         h.append("<h3>Spending Breakdown</h3>");
-        h.append(buildCategoryBars(sales, expenses, supplies));
-        h.append("</div>");
+        h.append("<div style='display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:center;'>");
+        h.append("<div style='flex:1;min-width:200px;'>").append(buildCategoryBars(sales, expenses, supplies)).append("</div>");
+        h.append("<div style='flex-shrink:0;'>").append(HtmlTemplates.pieChart(sales, expenses, supplies)).append("</div>");
+        h.append("</div></div>");
 
         // Top debtors
         if (!topDebtors.isEmpty()) {
@@ -191,11 +193,10 @@ public class AnalysisHandler implements HttpHandler {
         int barWidth = 20, gap = 8, groupGap = 20;
         int groupWidth = barWidth * 2 + gap;
         int chartHeight = 160;
-        int totalWidth = allDates.size() * (groupWidth + groupGap) + 60;
-        if (totalWidth < 400) totalWidth = 400;
-
+int totalWidth = allDates.size() * (groupWidth + groupGap) + 60;
+        if (totalWidth < 350) totalWidth = 350;
         StringBuilder svg = new StringBuilder();
-        svg.append("<div style='overflow-x:auto;'>");
+        svg.append("<div style='overflow-x:auto;text-align:center;'>");
         svg.append("<svg width='100%' viewBox='0 0 ").append(totalWidth).append(" ").append(chartHeight + 50).append("' xmlns='http://www.w3.org/2000/svg'>");
 
         int x = 40;

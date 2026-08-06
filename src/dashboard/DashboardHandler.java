@@ -61,11 +61,11 @@ public class DashboardHandler implements HttpHandler {
 
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Overview"));
-        h.append(HtmlTemplates.nav(token, "overview"));
+        h.append(HtmlTemplates.fullNav(token, "overview", user.getBusinessName()));
         h.append("<div class='container'>");
 
         // Greeting
-        h.append(HtmlTemplates.greeting(user.getUsername(), todaySales));
+        h.append(HtmlTemplates.greeting(user.getUsername(), todaySales, user.getBusinessName()));
 
         // Health indicator
         h.append(HtmlTemplates.healthIndicator(sales, expenses, supplies));
@@ -73,35 +73,40 @@ public class DashboardHandler implements HttpHandler {
         // Streak
         h.append(HtmlTemplates.streakBanner(streak));
 
-        // Today's summary
-        h.append("<div class='section'><h2>Today's Activity</h2>");
-        h.append("<div class='cards' style='margin-bottom:0;'>");
-        h.append(HtmlTemplates.card("Today's Sales", todaySales, "sales"));
-        h.append(HtmlTemplates.card("Today's Expenses", todayExpenses, "expenses"));
-        h.append(HtmlTemplates.card("Today's Supplies", todaySupplies, "supplies"));
-        h.append("</div></div>");
+        // Today's Activity Carousel
+        h.append("<div class='carousel'><div class='carousel-track' id='carouselTrack'>");
+        h.append("<div class='carousel-slide'><h3>Today's Sales</h3><div class='big-num' style='color:#2e7d32;'>&#8358;").append(HtmlTemplates.formatAmount(todaySales)).append("</div></div>");
+        h.append("<div class='carousel-slide'><h3>Today's Expenses</h3><div class='big-num' style='color:#c62828;'>&#8358;").append(HtmlTemplates.formatAmount(todayExpenses)).append("</div></div>");
+        h.append("<div class='carousel-slide'><h3>Today's Supplies</h3><div class='big-num' style='color:#e65100;'>&#8358;").append(HtmlTemplates.formatAmount(todaySupplies)).append("</div></div>");
+        h.append("</div><div class='carousel-dots'><span class='active' onclick='goSlide(0)'></span><span onclick='goSlide(1)'></span><span onclick='goSlide(2)'></span></div></div>");
+        h.append("<script>var ci=0;function goSlide(i){ci=i;document.getElementById('carouselTrack').style.transform='translateX(-'+i*100+'%)';");
+        h.append("document.querySelectorAll('.carousel-dots span').forEach(function(d,j){d.className=j===i?'active':'';});}")
+        .append("setInterval(function(){goSlide((ci+1)%3);},4000);</script>");
 
         // All-time summary
-        h.append("<div class='cards'>");
+        h.append("<div class='cards stagger-children'>");
         h.append(HtmlTemplates.card("Total Sales", sales, "sales"));
         h.append(HtmlTemplates.card("Total Expenses", expenses, "expenses"));
         h.append(HtmlTemplates.card("Total Supplies", supplies, "supplies"));
         h.append(HtmlTemplates.card("Debts Owed", debts, "debts"));
         h.append(HtmlTemplates.card("Payments In", payments, "payments"));
         String profitClass = profit >= 0 ? "profit" : "profit negative";
-        h.append("<div class='card ").append(profitClass).append("'><h3>Profit</h3>");
+        h.append("<div class='card ").append(profitClass).append(" fade-in'><h3>Profit</h3>");
         h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
         h.append("</div>");
 
-        // Chart
-        h.append("<div class='section'><h2>At a Glance</h2>");
+        // Charts
+        h.append("<div class='section anim-on-scroll'><h2>At a Glance</h2>");
         h.append(HtmlTemplates.barChart(sales, expenses, supplies, debts, payments));
+        h.append("</div>");
+        h.append("<div class='section alt anim-on-scroll'><h2>Spending Breakdown</h2>");
+        h.append(HtmlTemplates.pieChart(sales, expenses, supplies));
         h.append("</div>");
 
         // Recent transactions
-        h.append("<div class='section'><h2>Recent Transactions</h2>");
+        h.append("<div class='section anim-on-scroll'><h2>Recent Transactions</h2>");
         if (recent.isEmpty()) {
-            h.append("<p class='empty'>No transactions yet. Start recording in the chat!</p>");
+            h.append("" + HtmlTemplates.emptyState("No transactions yet. Start recording!", "Record now", "/chat/" + token) + "");
         } else {
             h.append(transactionTable(recent, false, token));
         }
@@ -120,7 +125,6 @@ public class DashboardHandler implements HttpHandler {
 
     // ===== TRANSACTIONS PAGE =====
     private String transactionsPage(User user, String token, String query) {
-        // Parse filters from query string
         String typeFilter = null, fromDate = null, toDate = null;
         if (query != null) {
             for (String param : query.split("&")) {
@@ -139,40 +143,89 @@ public class DashboardHandler implements HttpHandler {
 
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Transactions"));
-        h.append(HtmlTemplates.nav(token, "transactions"));
+        h.append(HtmlTemplates.fullNav(token, "transactions", user.getBusinessName()));
         h.append("<div class='container'>");
 
-        h.append("<div class='section'><h2>All Transactions</h2>");
-
-        // Filter bar
-        h.append("<form class='filter-bar' method='GET' action='/dashboard/").append(token).append("/transactions'>");
-        h.append("<select name='type'><option value='ALL'>All Types</option>");
-        for (TransactionType t : TransactionType.values()) {
-            String sel = t.name().equals(typeFilter) ? " selected" : "";
-            h.append("<option value='").append(t.name()).append("'").append(sel).append(">").append(t.name()).append("</option>");
+        // Category tabs
+        h.append("<div class='cat-tabs'>");
+        String[] tabs = {"ALL", "SALE", "EXPENSE", "SUPPLY", "DEBT", "PAYMENT"};
+        for (String tab : tabs) {
+            String active = (tab.equals(typeFilter) || (tab.equals("ALL") && (typeFilter == null || typeFilter.equals("ALL")))) ? " active t-" + tab : " t-" + tab;
+            String href = tab.equals("ALL") ? "/dashboard/" + token + "/transactions" : "/dashboard/" + token + "/transactions?type=" + tab;
+            if (fromDate != null && !fromDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "from=" + fromDate;
+            if (toDate != null && !toDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "to=" + toDate;
+            h.append("<a href='").append(href).append("' class='cat-tab").append(active).append("'>").append(tab).append("</a>");
         }
-        h.append("</select>");
+        h.append("</div>");
+
+        // Date filter
+        h.append("<form class='filter-bar' method='GET' action='/dashboard/").append(token).append("/transactions'>");
+        if (typeFilter != null && !typeFilter.equals("ALL")) h.append("<input type='hidden' name='type' value='").append(typeFilter).append("'>");
         h.append("<input type='date' name='from' value='").append(fromDate != null ? fromDate : "").append("' placeholder='From'>");
         h.append("<input type='date' name='to' value='").append(toDate != null ? toDate : "").append("' placeholder='To'>");
-        h.append("<button type='submit' class='btn btn-primary' style='padding:8px 16px;'>Filter</button>");
-        h.append("<a href='/dashboard/").append(token).append("/transactions' style='padding:8px;color:#666;text-decoration:none;'>Clear</a>");
+        h.append("<button type='submit' class='btn btn-primary' style='padding:7px 14px;font-size:12px;'>Filter</button>");
+        h.append("<a href='/dashboard/").append(token).append("/transactions' style='font-size:12px;color:#888;text-decoration:none;'>Clear</a>");
         h.append("</form>");
 
-        if (transactions.isEmpty()) {
-            h.append("<p class='empty'>No transactions match your filters.</p>");
-        } else {
-            h.append(transactionTable(transactions, true, token));
-        }
+        // Report button + View toggle
+        h.append("<div style='margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;'>");
+        h.append("<a href='/report/").append(token).append("' class='btn btn-primary' style='text-decoration:none;font-size:12px;padding:8px 16px;'>Download Report</a>");
+        h.append("<div style='display:flex;gap:4px;'>");
+        h.append("<button class='btn' id='cardViewBtn' onclick='showCards()' style='background:#4CAF50;color:#fff;'>Cards</button>");
+        h.append("<button class='btn' id='tableViewBtn' onclick='showTable()' style='background:#f5f5f5;color:#888;'>Table</button>");
         h.append("</div></div>");
 
-        // JavaScript for edit/delete
+        if (transactions.isEmpty()) {
+            h.append(HtmlTemplates.emptyState("No transactions match your filters.", "Record now", "/chat/" + token));
+        } else {
+            // Card view
+            h.append("<div id='cardView'>");
+            for (Transaction txn : transactions) {
+                h.append("<div class='txn-card anim-on-scroll type-").append(txn.getType().name()).append("' id='row-").append(txn.getId()).append("'>");
+                h.append("<div class='txn-top'>");
+                h.append(HtmlTemplates.badge(txn.getType().name()));
+                h.append("<span class='txn-amount'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</span>");
+                h.append("</div>");
+                h.append("<div class='txn-desc'>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</div>");
+                h.append("<div class='txn-bottom'>");
+                h.append("<span class='txn-meta'>");
+                if (txn.getCounterparty() != null) h.append(HtmlTemplates.escapeHtml(txn.getCounterparty())).append(" &#183; ");
+                h.append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "").append("</span>");
+                h.append("<div class='txn-actions'>");
+                h.append("<select id='edit-").append(txn.getId()).append("' class='category-select' onchange='editTxn(").append(txn.getId()).append(")'>");
+                for (TransactionType type : TransactionType.values()) {
+                    String sel = type == txn.getType() ? " selected" : "";
+                    h.append("<option value='").append(type.name()).append("'").append(sel).append(">").append(type.name()).append("</option>");
+                }
+                h.append("</select>");
+                h.append("<button class='btn btn-danger' onclick='deleteTxn(").append(txn.getId()).append(")'>Delete</button>");
+                h.append("</div></div></div>");
+            }
+            h.append("</div>");
+
+            // Table view (hidden by default)
+            h.append("<div id='tableView' style='display:none;'>");
+            h.append("<table><tr><th>Type</th><th>Amount</th><th>Description</th><th>Who</th><th>Date</th></tr>");
+            for (Transaction txn : transactions) {
+                h.append("<tr class='row-type-").append(txn.getType().name()).append("' id='trow-").append(txn.getId()).append("'>");
+                h.append("<td>").append(HtmlTemplates.badge(txn.getType().name())).append("</td>");
+                h.append("<td style='font-weight:600;'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</td>");
+                h.append("<td>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</td>");
+                h.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "—").append("</td>");
+                h.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "—").append("</td>");
+                h.append("</tr>");
+            }
+            h.append("</table></div>");
+        }
+        h.append("</div>");
+
         h.append("<script>");
+        h.append("function showCards(){document.getElementById('cardView').style.display='block';document.getElementById('tableView').style.display='none';document.getElementById('cardViewBtn').style.background='#4CAF50';document.getElementById('cardViewBtn').style.color='#fff';document.getElementById('tableViewBtn').style.background='#f5f5f5';document.getElementById('tableViewBtn').style.color='#888';}\n");
+        h.append("function showTable(){document.getElementById('cardView').style.display='none';document.getElementById('tableView').style.display='block';document.getElementById('tableViewBtn').style.background='#4CAF50';document.getElementById('tableViewBtn').style.color='#fff';document.getElementById('cardViewBtn').style.background='#f5f5f5';document.getElementById('cardViewBtn').style.color='#888';}\n");
         h.append("function deleteTxn(id){if(!confirm('Delete this transaction?'))return;");
         h.append("fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},");
-        h.append("body:'id='+id+'&token=").append(token).append("'}).then(r=>r.json()).then(d=>{if(d.success)document.getElementById('row-'+id).remove();});}\n");
-
-        h.append("function editTxn(id){var sel=document.getElementById('edit-'+id);");
-        h.append("var newType=sel.value;");
+        h.append("body:'id='+id+'&token=").append(token).append("'}).then(r=>r.json()).then(d=>{if(d.success){var e=document.getElementById('row-'+id);if(e)e.remove();var t=document.getElementById('trow-'+id);if(t)t.remove();}});}\n");
+        h.append("function editTxn(id){var sel=document.getElementById('edit-'+id);var newType=sel.value;");
         h.append("fetch('/api/edit',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},");
         h.append("body:'id='+id+'&type='+newType+'&token=").append(token).append("'}).then(r=>r.json()).then(d=>{if(d.success)location.reload();});}\n");
         h.append("</script>");
@@ -187,31 +240,45 @@ public class DashboardHandler implements HttpHandler {
 
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Debts"));
-        h.append(HtmlTemplates.nav(token, "debts"));
+        h.append(HtmlTemplates.fullNav(token, "debts", user.getBusinessName()));
         h.append("<div class='container'>");
 
         h.append("<div class='section'><h2>Debtor Summary</h2>");
 
         if (debtSummary.isEmpty()) {
-            h.append("<p class='empty'>No debts recorded yet.</p>");
+            h.append(HtmlTemplates.emptyState("No debts recorded yet.", "Record now", "/chat/" + token));
         } else {
             double totalRemaining = 0;
             for (Map.Entry<String, double[]> entry : debtSummary.entrySet()) {
                 String name = entry.getKey();
                 double[] vals = entry.getValue(); // [owed, paid, remaining]
                 totalRemaining += vals[2];
+                int paidPercent = vals[0] > 0 ? (int)(vals[1] / vals[0] * 100) : 0;
+                String statusClass, statusText;
+                if (vals[2] <= 0) { statusClass = "status-paid"; statusText = "Fully paid"; }
+                else if (vals[1] > 0) { statusClass = "status-partial"; statusText = "Partially paid"; }
+                else { statusClass = "status-unpaid"; statusText = "Unpaid"; }
 
-                h.append("<div class='debt-card'>");
+                h.append("<div class='debt-card anim-on-scroll'>");
+                h.append("<div style='display:flex;justify-content:space-between;align-items:center;'>");
                 h.append("<h3>").append(HtmlTemplates.escapeHtml(name)).append("</h3>");
-                h.append("<div class='amounts'>");
-                h.append("<span class='owed'>Owed: &#8358;").append(HtmlTemplates.formatAmount(vals[0])).append("</span>");
-                h.append("<span class='paid'>Paid: &#8358;").append(HtmlTemplates.formatAmount(vals[1])).append("</span>");
-                h.append("<span class='remaining'>Remaining: &#8358;").append(HtmlTemplates.formatAmount(vals[2])).append("</span>");
+                h.append("<span class='status-badge ").append(statusClass).append("'>").append(statusText).append("</span>");
+                h.append("</div>");
+
+                // Progress bar - scroll triggered
+                String barColor = vals[2] <= 0 ? "#4CAF50" : vals[1] > 0 ? "#FF9800" : "#f44336";
+                h.append("<div class='progress-bar'><div class='progress-animate' data-width='").append(paidPercent).append("' style='background:").append(barColor).append(";'></div></div>");
+
+                h.append("<div class='debt-amounts'>");
+                h.append("<span style='color:#ad1457;'>Owed: &#8358;").append(HtmlTemplates.formatAmount(vals[0])).append("</span>");
+                h.append("<span style='color:#2e7d32;'>Paid: &#8358;").append(HtmlTemplates.formatAmount(vals[1])).append("</span>");
+                h.append("<span style='color:#c62828;font-weight:700;'>Left: <span class='count-up' data-target='").append((long)vals[2]).append("'>&#8358;0.00</span></span>");
                 h.append("</div></div>");
             }
 
-            h.append("<div style='margin-top:20px;padding:15px;background:#fce4ec;border-radius:8px;'>");
-            h.append("<strong style='color:#ad1457;'>Total Outstanding: &#8358;").append(HtmlTemplates.formatAmount(totalRemaining)).append("</strong>");
+            h.append("<div style='margin-top:16px;padding:14px;background:linear-gradient(135deg,#fce4ec,#fff);border-radius:10px;text-align:center;' class='anim-on-scroll'>");
+            h.append("<span style='font-size:12px;color:#888;'>Total Outstanding</span><br>");
+            h.append("<strong style='font-size:20px;color:#ad1457;' class='count-up' data-target='").append((long)totalRemaining).append("'>&#8358;0.00</strong>");
             h.append("</div>");
         }
 
