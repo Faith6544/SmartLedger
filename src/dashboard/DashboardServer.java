@@ -9,6 +9,7 @@ public class DashboardServer {
 
     public DashboardServer(int port) throws Exception {
         server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/", new LandingHandler());
         server.createContext("/dashboard/", new DashboardHandler());
         server.createContext("/chat/", new WebChatHandler());
         server.createContext("/api/", new ApiHandler());
@@ -18,7 +19,7 @@ public class DashboardServer {
 
     public void start() {
         server.start();
-        System.out.println("Dashboard server running at http://localhost:8080/dashboard/");
+        System.out.println("Dashboard server running at http://localhost:8080/");
     }
 
     public void stop() {

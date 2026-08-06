@@ -1,0 +1,7 @@
+out/
+*.class
+*.log
+hs_err_*
+replay_*
+SetupCloud.java
+TestConnection.java
