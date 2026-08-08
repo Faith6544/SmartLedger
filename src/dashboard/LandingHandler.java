@@ -29,6 +29,11 @@ public class LandingHandler implements HttpHandler {
     private String buildLanding() {
         return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
         "<meta name='viewport' content='width=device-width,initial-scale=1.0'>" +
+        "<meta property='og:title' content='SmartLedger'>" +
+        "<meta property='og:description' content='Record-keeping made simple. Type what you sold, we handle the rest.'>" +
+        "<meta property='og:image' content='https://raw.githubusercontent.com/YungD517/SmartLedger/main/logo.png'>" +
+        "<meta property='og:url' content='https://smartledger-m28i.onrender.com'>" +
+        "<meta property='og:type' content='website'>" +
         "<title>SmartLedger — Record-keeping made simple</title>" +
         "<link rel='icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
         "<link rel='shortcut icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
