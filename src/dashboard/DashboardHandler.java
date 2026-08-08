@@ -27,7 +27,7 @@ public class DashboardHandler implements HttpHandler {
 
         String token = parts[2];
         User user = userDAO.getUserByToken(token);
-        if (user == null) { send(exchange, 404, notFoundPage()); return; }
+        if (user == null) { exchange.getResponseHeaders().set("Location", "/auth/login"); exchange.sendResponseHeaders(302, -1); return; }
 
         String page = parts.length > 3 ? parts[3] : "overview";
         String query = exchange.getRequestURI().getQuery();
@@ -36,14 +36,23 @@ public class DashboardHandler implements HttpHandler {
         switch (page) {
             case "transactions": html = transactionsPage(user, token, query); break;
             case "debts": html = debtsPage(user, token); break;
-            default: html = overviewPage(user, token); break;
+            default: html = overviewPage(user, token, query); break;
         }
 
         send(exchange, 200, html);
     }
 
     // ===== OVERVIEW PAGE =====
-    private String overviewPage(User user, String token) {
+    private String overviewPage(User user, String token, String query) {
+        // Check for welcome flag
+        String welcomeType = null;
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] kv = param.split("=", 2);
+                if (kv.length == 2 && kv[0].equals("welcome")) welcomeType = kv[1];
+            }
+        }
+
         int uid = user.getId();
         double sales = transactionDAO.getTotalByType(uid, TransactionType.SALE);
         double expenses = transactionDAO.getTotalByType(uid, TransactionType.EXPENSE);
@@ -118,6 +127,28 @@ public class DashboardHandler implements HttpHandler {
 
         // FAB button
         h.append("<a href='/chat/").append(token).append("' class='fab' title='Record a transaction'>+</a>");
+
+        // Welcome toast
+        if (welcomeType != null) {
+            String toastMsg;
+            if (welcomeType.equals("new")) {
+                if (!user.getBusinessName().isEmpty()) {
+                    toastMsg = "Welcome! " + HtmlTemplates.escapeHtml(user.getBusinessName()) + " is all set up.";
+                } else {
+                    toastMsg = "Welcome to SmartLedger, " + HtmlTemplates.escapeHtml(user.getUsername()) + "!";
+                }
+            } else {
+                toastMsg = "Welcome back, " + HtmlTemplates.escapeHtml(user.getUsername()) + "!";
+            }
+            h.append("<script>document.addEventListener('DOMContentLoaded',function(){");
+            h.append("var t=document.createElement('div');");
+            h.append("t.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#4CAF50,#66BB6A);color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:all 0.5s ease;box-shadow:0 6px 20px rgba(76,175,80,0.3);max-width:90%;text-align:center;';");
+            h.append("t.textContent='").append(toastMsg).append("';");
+            h.append("document.body.appendChild(t);");
+            h.append("setTimeout(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';},100);");
+            h.append("setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-20px)';setTimeout(function(){t.remove();},500);},4000);");
+            h.append("});</script>");
+        }
 
         h.append(HtmlTemplates.footer());
         return h.toString();

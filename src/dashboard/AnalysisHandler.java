@@ -24,7 +24,7 @@ public class AnalysisHandler implements HttpHandler {
         String query = exchange.getRequestURI().getQuery();
 
         User user = userDAO.getUserByToken(token);
-        if (user == null) { send(exchange, 404, "Not found"); return; }
+        if (user == null) { exchange.getResponseHeaders().set("Location", "/auth/login"); exchange.sendResponseHeaders(302, -1); return; }
 
         // Parse period from query
         String period = "week";
@@ -193,8 +193,9 @@ public class AnalysisHandler implements HttpHandler {
         int barWidth = 20, gap = 8, groupGap = 20;
         int groupWidth = barWidth * 2 + gap;
         int chartHeight = 160;
-int totalWidth = allDates.size() * (groupWidth + groupGap) + 60;
-        if (totalWidth < 350) totalWidth = 350;
+        int totalWidth = allDates.size() * (groupWidth + groupGap) + 60;
+        // Dynamic width - no forced minimum, chart fits the data
+
         StringBuilder svg = new StringBuilder();
         svg.append("<div style='overflow-x:auto;text-align:center;'>");
         svg.append("<svg width='100%' viewBox='0 0 ").append(totalWidth).append(" ").append(chartHeight + 50).append("' xmlns='http://www.w3.org/2000/svg'>");

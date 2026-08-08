@@ -8,7 +8,7 @@ public class HtmlTemplates {
         return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
             "<meta name='viewport' content='width=device-width,initial-scale=1.0'>" +
             "<title>SmartLedger - " + title + "</title>" +
-            "<link rel='icon' type='image/png' href='" + LOGO_DATA + "'>" +
+            "<link rel='icon' type='image/png' href='" + LOGO_DATA + "'><link rel='shortcut icon' type='image/png' href='" + LOGO_DATA + "'>" +
             "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css'>" +
             "<style>" + CSS + "</style></head><body><div class='device-frame'><div class='app-shell'>";
     }
@@ -175,7 +175,7 @@ public class HtmlTemplates {
         ".app-header{background:#fff;border-bottom:2px solid #4CAF50;padding:0 16px;display:flex;justify-content:space-between;align-items:center;height:52px;position:sticky;top:0;z-index:100;}" +
         ".hdr-left{display:flex;align-items:center;gap:8px;}" +
         ".logo-link{display:flex;align-items:center;text-decoration:none;gap:6px;transition:transform 0.3s;} .logo-link:hover{transform:scale(1.08);}" +
-        ".logo-circle{width:34px;height:34px;background:#c6edc3;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:box-shadow 0.3s;} .logo-circle:hover{box-shadow:0 0 15px rgba(76,175,80,0.5);}" +
+        ".logo-circle{width:34px;height:34px;background:#c6edc3;border:2px solid #1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:box-shadow 0.3s;} .logo-circle:hover{box-shadow:0 0 15px rgba(76,175,80,0.5);}" +
         ".logo-img{width:22px;height:22px;}" +
         ".logo-text{font-size:16px;font-weight:700;color:#2e7d32;}" +
         ".biz-name{font-size:12px;font-weight:600;color:#666;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
@@ -185,7 +185,7 @@ public class HtmlTemplates {
         ".sidebar{position:fixed;left:-300px;top:0;width:270px;height:100vh;background:linear-gradient(180deg,#1a1a2e 0%,#2e7d32 100%);z-index:200;transition:left 0.4s cubic-bezier(0.4,0,0.2,1);overflow-y:auto;}" +
         ".sidebar.open{left:0;}" +
         ".sidebar-hdr{padding:30px 20px 20px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.15);}" +
-        ".sidebar-logo-circle{width:80px;height:80px;background:#c6edc3;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}" +
+        ".sidebar-logo-circle{width:80px;height:80px;background:#c6edc3;border:3px solid #1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}" +
         ".sidebar-brand{font-size:18px;font-weight:700;color:#fff;}" +
         ".sidebar-close{position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.3s;} .sidebar-close:hover{color:#fff;transform:rotate(90deg);}" +
         ".sidebar-nav{padding:10px 0;}" +

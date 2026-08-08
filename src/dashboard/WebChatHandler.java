@@ -17,7 +17,7 @@ public class WebChatHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         String token = path.replace("/chat/", "").replace("/", "");
         User user = userDAO.getUserByToken(token);
-        if (user == null) { byte[] b = "Not found".getBytes(); exchange.sendResponseHeaders(404, b.length); exchange.getResponseBody().write(b); exchange.getResponseBody().close(); return; }
+        if (user == null) { exchange.getResponseHeaders().set("Location", "/auth/login"); exchange.sendResponseHeaders(302, -1); return; }
         byte[] bytes = buildChatPage(user, token).getBytes("UTF-8");
         exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
         exchange.sendResponseHeaders(200, bytes.length);

@@ -20,7 +20,7 @@ public class ReportHandler implements HttpHandler {
         String path = exchange.getRequestURI().getPath();
         String token = path.replace("/report/", "").replace("/", "");
         User user = userDAO.getUserByToken(token);
-        if (user == null) { send(exchange, 404, "Not found"); return; }
+        if (user == null) { exchange.getResponseHeaders().set("Location", "/auth/login"); exchange.sendResponseHeaders(302, -1); return; }
         send(exchange, 200, buildReport(user, token));
     }
 
@@ -65,7 +65,7 @@ public class ReportHandler implements HttpHandler {
 
         // Header with logo and business name
         h.append("<div class='report-header' style='background:linear-gradient(135deg,#e8f5e9,#c6edc3);border-radius:12px;padding:30px;border-bottom:none;'>");
-        h.append("<div style='display:inline-block;width:60px;height:60px;background:#c6edc3;border-radius:50%;padding:10px;'>");
+        h.append("<div style='display:inline-flex;align-items:center;justify-content:center;width:60px;height:60px;background:#c6edc3;border:2px solid #1a1a2e;border-radius:50%;'>");
         h.append("<img src='").append(HtmlTemplates.LOGO_DATA).append("' style='width:40px;height:40px;'></div>");
         h.append("<h1>SmartLedger</h1>");
         if (!user.getBusinessName().isEmpty()) {
