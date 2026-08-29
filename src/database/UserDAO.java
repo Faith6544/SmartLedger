@@ -8,19 +8,22 @@ import java.util.List;
 public class UserDAO {
     
     public void save(User user) {
-        String sql = "INSERT INTO users (username, dashboard_token, password) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (username, dashboard_token, password, business_name) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getDashboardToken());
             pstmt.setString(3, user.getPassword() != null ? user.getPassword() : "password");
+            pstmt.setString(4, user.getBusinessName());
             pstmt.executeUpdate();
             
             ResultSet rs = pstmt.getGeneratedKeys();
             if (rs.next()) {
                 user.setId(rs.getInt(1));
             }
+            System.out.println("✅ User saved: " + user.getUsername());
         } catch (SQLException e) {
+            System.err.println("❌ Error saving user: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -86,13 +89,14 @@ public class UserDAO {
     }
 
     public boolean updateUser(User user) {
-        String sql = "UPDATE users SET username = ?, dashboard_token = ?, password = ? WHERE id = ?";
+        String sql = "UPDATE users SET username = ?, dashboard_token = ?, password = ?, business_name = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, user.getUsername());
             pstmt.setString(2, user.getDashboardToken());
             pstmt.setString(3, user.getPassword());
-            pstmt.setInt(4, user.getId());
+            pstmt.setString(4, user.getBusinessName());
+            pstmt.setInt(5, user.getId());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -112,16 +116,25 @@ public class UserDAO {
         }
     }
 
+    public boolean userExists(String username) {
+        return findByUsername(username) != null;
+    }
+
     private User extractUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getInt("id"));
         user.setUsername(rs.getString("username"));
         user.setDashboardToken(rs.getString("dashboard_token"));
-        // Password column might not exist yet - handle gracefully
+        user.setPassword(rs.getString("password"));
         try {
-            user.setPassword(rs.getString("password"));
+            user.setBusinessName(rs.getString("business_name"));
         } catch (SQLException e) {
-            user.setPassword("password"); // default
+            // Column might not exist
+        }
+        try {
+            user.setEmail(rs.getString("email"));
+        } catch (SQLException e) {
+            // Column might not exist
         }
         return user;
     }

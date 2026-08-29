@@ -22,13 +22,6 @@ public class User {
         this.password = password;
     }
 
-    public User(int id, String username, String dashboardToken, String password) {
-        this.id = id;
-        this.username = username;
-        this.dashboardToken = dashboardToken;
-        this.password = password;
-    }
-
     public User(String username, String dashboardToken, String password, String businessName) {
         this.username = username;
         this.dashboardToken = dashboardToken;
@@ -57,6 +50,11 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{id=" + id + ", username='" + username + "'}";
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", dashboardToken='" + dashboardToken + '\'' +
+                ", businessName='" + businessName + '\'' +
+                '}';
     }
 }
