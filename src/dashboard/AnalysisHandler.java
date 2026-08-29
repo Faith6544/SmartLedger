@@ -59,8 +59,12 @@ public class AnalysisHandler implements HttpHandler {
                 periodLabel = "Last Month";
                 break;
             case "custom":
-                from = customFrom != null ? LocalDate.parse(customFrom) : now.minusDays(7);
-                to = customTo != null ? LocalDate.parse(customTo) : now;
+                // customFrom/customTo come from the URL query string — a malformed date here
+                // used to throw an uncaught DateTimeParseException and crash the whole page.
+                LocalDate parsedFrom = parseDateOrNull(customFrom);
+                LocalDate parsedTo = parseDateOrNull(customTo);
+                from = parsedFrom != null ? parsedFrom : now.minusDays(7);
+                to = parsedTo != null ? parsedTo : now;
                 // Cap at 3 months
                 if (from.isBefore(to.minusMonths(3))) from = to.minusMonths(3);
                 periodLabel = from.toString() + " to " + to.toString();
@@ -359,6 +363,11 @@ public class AnalysisHandler implements HttpHandler {
     private String periodBtn(String token, String period, String label, String active) {
         String cls = period.equals(active) ? "period-btn active" : "period-btn";
         return "<a href='/analysis/" + token + "?period=" + period + "' class='" + cls + "'>" + label + "</a>";
+    }
+
+    private LocalDate parseDateOrNull(String s) {
+        if (s == null || s.isEmpty()) return null;
+        try { return LocalDate.parse(s); } catch (java.time.format.DateTimeParseException e) { return null; }
     }
 
     private void send(HttpExchange exchange, int code, String html) throws IOException {

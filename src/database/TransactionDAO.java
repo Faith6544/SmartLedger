@@ -12,9 +12,8 @@ public class TransactionDAO {
 
     public void save(Transaction txn) {
         String sql = "INSERT INTO transactions (user_id, type, amount, description, counterparty) VALUES (?, ?, ?, ?, ?)";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, txn.getUserId());
             stmt.setString(2, txn.getType().name());
             stmt.setDouble(3, txn.getAmount());
@@ -33,9 +32,8 @@ public class TransactionDAO {
     public List<Transaction> getRecent(int userId, int limit) {
         String sql = "SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
         List<Transaction> list = new ArrayList<>();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setInt(2, limit);
             ResultSet rs = stmt.executeQuery();
@@ -64,9 +62,8 @@ public class TransactionDAO {
         sql.append(" ORDER BY created_at DESC");
 
         List<Transaction> list = new ArrayList<>();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql.toString());
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 stmt.setObject(i + 1, params.get(i));
             }
@@ -78,9 +75,8 @@ public class TransactionDAO {
 
     public double getTotalByType(int userId, TransactionType type) {
         String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, type.name());
             ResultSet rs = stmt.executeQuery();
@@ -91,9 +87,8 @@ public class TransactionDAO {
 
     public double getTodayTotalByType(int userId, TransactionType type) {
         String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = ? AND DATE(created_at) = CURDATE()";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, type.name());
             ResultSet rs = stmt.executeQuery();
@@ -115,9 +110,8 @@ public class TransactionDAO {
         // Get all debts grouped by counterparty
         String debtSql = "SELECT COALESCE(counterparty, 'Unknown') as name, SUM(amount) as total " +
                           "FROM transactions WHERE user_id = ? AND type = 'DEBT' GROUP BY counterparty ORDER BY total DESC";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(debtSql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(debtSql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -130,9 +124,8 @@ public class TransactionDAO {
         // Match payments by counterparty
         String paymentSql = "SELECT COALESCE(counterparty, 'Unknown') as name, SUM(amount) as total " +
                              "FROM transactions WHERE user_id = ? AND type = 'PAYMENT' AND counterparty IS NOT NULL GROUP BY counterparty";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(paymentSql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(paymentSql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -151,9 +144,8 @@ public class TransactionDAO {
 
     public boolean deleteTransaction(int transactionId, int userId) {
         String sql = "DELETE FROM transactions WHERE id = ? AND user_id = ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, transactionId);
             stmt.setInt(2, userId);
             return stmt.executeUpdate() > 0;
@@ -163,9 +155,8 @@ public class TransactionDAO {
 
     public boolean updateType(int transactionId, TransactionType newType, int userId) {
         String sql = "UPDATE transactions SET type = ? WHERE id = ? AND user_id = ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newType.name());
             stmt.setInt(2, transactionId);
             stmt.setInt(3, userId);
@@ -176,9 +167,8 @@ public class TransactionDAO {
 
     public boolean deleteLastTransaction(int userId) {
         String sql = "DELETE FROM transactions WHERE id = (SELECT max_id FROM (SELECT MAX(id) as max_id FROM transactions WHERE user_id = ?) as temp)";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) { e.printStackTrace(); }
@@ -189,9 +179,8 @@ public class TransactionDAO {
 
     private List<Transaction> query(String sql, int userId) {
         List<Transaction> list = new ArrayList<>();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) list.add(fromResultSet(rs));
@@ -223,9 +212,8 @@ public class TransactionDAO {
         String sql = "SELECT DATE(created_at) as day, SUM(amount) as total FROM transactions " +
                      "WHERE user_id = ? AND type = ? AND DATE(created_at) BETWEEN ? AND ? " +
                      "GROUP BY DATE(created_at) ORDER BY day";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, type.name());
             stmt.setString(3, from);
@@ -244,9 +232,8 @@ public class TransactionDAO {
     public double getPeriodTotal(int userId, TransactionType type, String from, String to) {
         String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions " +
                      "WHERE user_id = ? AND type = ? AND DATE(created_at) BETWEEN ? AND ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, type.name());
             stmt.setString(3, from);
@@ -265,9 +252,8 @@ public class TransactionDAO {
         String sql = "SELECT COALESCE(counterparty, 'Unknown') as name, SUM(amount) as total FROM transactions " +
                      "WHERE user_id = ? AND type = 'DEBT' AND DATE(created_at) BETWEEN ? AND ? " +
                      "GROUP BY counterparty ORDER BY total DESC LIMIT 10";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, from);
             stmt.setString(3, to);
@@ -286,9 +272,8 @@ public class TransactionDAO {
         String sql = "SELECT DATE(created_at) as day, SUM(amount) as total FROM transactions " +
                      "WHERE user_id = ? AND type = 'SALE' AND DATE(created_at) BETWEEN ? AND ? " +
                      "GROUP BY DATE(created_at) ORDER BY total DESC LIMIT 1";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, from);
             stmt.setString(3, to);
@@ -304,9 +289,8 @@ public class TransactionDAO {
     public int getActiveDays(int userId, String from, String to) {
         String sql = "SELECT COUNT(DISTINCT DATE(created_at)) as days FROM transactions " +
                      "WHERE user_id = ? AND DATE(created_at) BETWEEN ? AND ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             stmt.setString(2, from);
             stmt.setString(3, to);
@@ -321,9 +305,8 @@ public class TransactionDAO {
      */
     public int getStreak(int userId) {
         String sql = "SELECT DISTINCT DATE(created_at) as day FROM transactions WHERE user_id = ? ORDER BY day DESC LIMIT 60";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
 
@@ -356,8 +339,7 @@ public class TransactionDAO {
      * Logs a parse correction for learning.
      */
     public void logCorrection(String originalText, String guessedType, String correctedType) {
-        try {
-            Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection()) {
             // Create table if not exists
             conn.createStatement().execute(
                 "CREATE TABLE IF NOT EXISTS parse_corrections (" +
@@ -367,13 +349,14 @@ public class TransactionDAO {
                 "corrected_type VARCHAR(20), " +
                 "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
             );
-            PreparedStatement stmt = conn.prepareStatement(
+            try (PreparedStatement stmt = conn.prepareStatement(
                 "INSERT INTO parse_corrections (original_text, guessed_type, corrected_type) VALUES (?, ?, ?)"
-            );
-            stmt.setString(1, originalText);
-            stmt.setString(2, guessedType);
-            stmt.setString(3, correctedType);
-            stmt.executeUpdate();
+            )) {
+                stmt.setString(1, originalText);
+                stmt.setString(2, guessedType);
+                stmt.setString(3, correctedType);
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) { e.printStackTrace(); }
     }
 }

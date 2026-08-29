@@ -9,9 +9,8 @@ public class ChatMessageDAO {
 
     public void save(ChatMessage msg) {
         String sql = "INSERT INTO chat_messages (user_id, raw_text, is_transaction) VALUES (?, ?, ?)";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, msg.getUserId());
             stmt.setString(2, msg.getRawText());
             stmt.setBoolean(3, msg.isTransaction());
@@ -24,9 +23,8 @@ public class ChatMessageDAO {
     public List<ChatMessage> getAllByUser(int userId) {
         String sql = "SELECT * FROM chat_messages WHERE user_id = ? ORDER BY created_at DESC";
         List<ChatMessage> list = new ArrayList<>();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {

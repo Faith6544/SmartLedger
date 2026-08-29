@@ -2,6 +2,7 @@ package dashboard;
 
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 
 public class DashboardServer {
 
@@ -16,7 +17,7 @@ public class DashboardServer {
         server.createContext("/auth/", new AuthHandler());
         server.createContext("/analysis/", new AnalysisHandler());
         server.createContext("/report/", new ReportHandler());
-        server.setExecutor(null);
+        server.setExecutor(Executors.newFixedThreadPool(10)); // was null — one request at a time before this
     }
 
     public void start() {

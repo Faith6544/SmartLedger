@@ -183,17 +183,20 @@ public class DashboardHandler implements HttpHandler {
         for (String tab : tabs) {
             String active = (tab.equals(typeFilter) || (tab.equals("ALL") && (typeFilter == null || typeFilter.equals("ALL")))) ? " active t-" + tab : " t-" + tab;
             String href = tab.equals("ALL") ? "/dashboard/" + token + "/transactions" : "/dashboard/" + token + "/transactions?type=" + tab;
-            if (fromDate != null && !fromDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "from=" + fromDate;
-            if (toDate != null && !toDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "to=" + toDate;
+            // fromDate/toDate come straight from the URL query string — escape before writing into an href attribute
+            if (fromDate != null && !fromDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "from=" + HtmlTemplates.escapeHtml(fromDate);
+            if (toDate != null && !toDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "to=" + HtmlTemplates.escapeHtml(toDate);
             h.append("<a href='").append(href).append("' class='cat-tab").append(active).append("'>").append(tab).append("</a>");
         }
         h.append("</div>");
 
         // Date filter
         h.append("<form class='filter-bar' method='GET' action='/dashboard/").append(token).append("/transactions'>");
-        if (typeFilter != null && !typeFilter.equals("ALL")) h.append("<input type='hidden' name='type' value='").append(typeFilter).append("'>");
-        h.append("<input type='date' name='from' value='").append(fromDate != null ? fromDate : "").append("' placeholder='From'>");
-        h.append("<input type='date' name='to' value='").append(toDate != null ? toDate : "").append("' placeholder='To'>");
+        // type/from/to are user-controlled (URL query string) — must be escaped before landing in an HTML attribute,
+        // otherwise ?type='><script>...</script> breaks out of the value='' attribute and runs in the trader's session
+        if (typeFilter != null && !typeFilter.equals("ALL")) h.append("<input type='hidden' name='type' value='").append(HtmlTemplates.escapeHtml(typeFilter)).append("'>");
+        h.append("<input type='date' name='from' value='").append(HtmlTemplates.escapeHtml(fromDate != null ? fromDate : "")).append("' placeholder='From'>");
+        h.append("<input type='date' name='to' value='").append(HtmlTemplates.escapeHtml(toDate != null ? toDate : "")).append("' placeholder='To'>");
         h.append("<button type='submit' class='btn btn-primary' style='padding:7px 14px;font-size:12px;'>Filter</button>");
         h.append("<a href='/dashboard/").append(token).append("/transactions' style='font-size:12px;color:#888;text-decoration:none;'>Clear</a>");
         h.append("</form>");

@@ -8,8 +8,7 @@ public class UserDAO {
     public UserDAO() { migrate(); }
 
     private void migrate() {
-        try {
-            Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnection.getConnection()) {
             DatabaseMetaData md = conn.getMetaData();
             ResultSet rs = md.getColumns(null, null, "users", "business_name");
             if (!rs.next()) {
@@ -21,9 +20,8 @@ public class UserDAO {
 
     public boolean createUser(User user) {
         String sql = "INSERT INTO users (username, password_hash, dashboard_token, business_name) VALUES (?, ?, ?, ?)";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getPasswordHash());
             stmt.setString(3, user.getDashboardToken());
@@ -37,9 +35,8 @@ public class UserDAO {
 
     public User login(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -52,9 +49,8 @@ public class UserDAO {
 
     public User getUserByToken(String token) {
         String sql = "SELECT * FROM users WHERE dashboard_token = ?";
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, token);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return fromRS(rs);

@@ -82,6 +82,10 @@ public class WebChatHandler implements HttpHandler {
 
         h.append("function showToast(msg){var t=document.createElement('div');t.className='toast success';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('show');},50);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},500);},4000);}\n\n");
 
+        // d.counterparty is raw text the trader typed (e.g. "Oga Musa") — it goes into innerHTML below,
+        // so it has to be escaped first or typed HTML would run as script in their own browser.
+        h.append("function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}\n\n");
+
         h.append("function sendMessage(){\n");
         h.append("  var msg=chatInput.value.trim();\n");
         h.append("  if(!msg)return;\n");
@@ -109,7 +113,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("  div.id=id;\n");
         h.append("  var html='<strong>'+(low?'Not sure about this one:':'Transaction detected:')+'</strong><br>';\n");
         h.append("  html+='Category: <b>'+d.type+'</b> | Amount: <b>\\u20A6'+d.amountFormatted+'</b>';\n");
-        h.append("  if(d.counterparty)html+=' | Who: <b>'+d.counterparty+'</b>';\n");
+        h.append("  if(d.counterparty)html+=' | Who: <b>'+escapeHtml(d.counterparty)+'</b>';\n");
         h.append("  html+='<br><br>Change category: <select id=\"sel-'+id+'\">';\n");
         h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
         h.append("  html+='</select><br><div class=\"actions\">';\n");
@@ -132,7 +136,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("  fetch('/api/confirm',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'type='+type+'&amount='+d.amount+'&description='+encodeURIComponent(d.description)+'&counterparty='+encodeURIComponent(cp)+'&token='+TOKEN+guessed})\n");
         h.append("  .then(function(r){return r.json();})\n");
         h.append("  .then(function(res){\n");
-        h.append("    document.getElementById(id).innerHTML='<span style=\"color:#2e7d32;\">\\u2705 Recorded '+type+': \\u20A6'+res.amountFormatted+(cp?' ('+cp+')':'')+'</span>';\n");
+        h.append("    document.getElementById(id).innerHTML='<span style=\"color:#2e7d32;\">\\u2705 Recorded '+type+': \\u20A6'+res.amountFormatted+(cp?' ('+escapeHtml(cp)+')':'')+'</span>';\n");
         h.append("    showToast(type+' recorded: \\u20A6'+res.amountFormatted);\n");
         h.append("    delete pending[id];\n");
         h.append("  })\n");
