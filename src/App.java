@@ -3,13 +3,17 @@ import javax.swing.*;
 
 public class App {
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) { }
-
         SwingUtilities.invokeLater(() -> {
-            LoginWindow login = new LoginWindow();
-            login.setVisible(true);
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                new LoginWindow().setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, 
+                    "Error starting SmartLedger: " + e.getMessage(),
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
         });
     }
 }

@@ -1,181 +1,273 @@
-package dashboard;
+package gui;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import java.io.IOException;
-import java.io.OutputStream;
+import commands.CommandHandler;
+import database.ChatMessageDAO;
+import database.TransactionDAO;
+import model.ChatMessage;
+import model.Transaction;
+import model.TransactionType;
+import model.User;
+import parser.MessageParser;
+import parser.ParseResult;
+import dashboard.DashboardServer;
 
-public class LandingHandler implements HttpHandler {
+import javax.swing.*;
+import javax.swing.text.*;
+import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String path = exchange.getRequestURI().getPath();
+public class ChatWindow extends JFrame {
 
-        // Only handle exact root path — let other handlers handle their paths
-        if (!path.equals("/")) {
-            exchange.sendResponseHeaders(404, -1);
+    private JTextPane chatPane;
+    private JTextField inputField;
+    private StyledDocument doc;
+    private User currentUser;
+    private MessageParser parser;
+    private CommandHandler commandHandler;
+    private TransactionDAO transactionDAO;
+    private ChatMessageDAO chatMessageDAO;
+    private DashboardServer dashboardServer;
+
+    private boolean dashboardStarted = false;
+
+    // Constructor with User
+    public ChatWindow(User user) {
+        this.currentUser = user;
+        this.parser = new MessageParser();
+        this.commandHandler = new CommandHandler();
+        this.transactionDAO = new TransactionDAO();
+        this.chatMessageDAO = new ChatMessageDAO();
+
+        setTitle("SmartLedger - " + user.getUsername());
+        setSize(550, 650);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Try to start dashboard on port 8081 (avoid conflict)
+        startDashboard(8081);
+
+        buildUI();
+
+        appendSystem("Welcome to SmartLedger, " + user.getUsername() + "!");
+        appendSystem("Type your transactions naturally, or type \"help\" to see commands.");
+        if (dashboardStarted) {
+            appendSystem("📊 Dashboard: http://localhost:" + getDashboardPort() + "/dashboard/" + user.getDashboardToken());
+        } else {
+            appendSystem("⚠️ Dashboard link unavailable right now — port 8081 may already be in use.");
+            appendSystem("💡 Try running WebApp separately on a different port.");
+        }
+        appendSystem("--------------------------------------------");
+    }
+
+    // Default constructor for testing (no User required)
+    public ChatWindow() {
+        this(createDefaultUser());
+    }
+
+    private static User createDefaultUser() {
+        // Create a default user for testing
+        return new User(1, "testuser", "test123-dashboard-token");
+    }
+
+    private int getDashboardPort() {
+        return 8081;
+    }
+
+    private void buildUI() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(30, 30, 30));
+
+        // Header
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        header.setBackground(new Color(25, 25, 25));
+        header.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+        JLabel headerLabel = new JLabel("SmartLedger - " + currentUser.getUsername());
+        headerLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        headerLabel.setForeground(new Color(76, 175, 80));
+        header.add(headerLabel);
+        mainPanel.add(header, BorderLayout.NORTH);
+
+        // Chat area
+        chatPane = new JTextPane();
+        chatPane.setEditable(false);
+        chatPane.setBackground(new Color(30, 30, 30));
+        chatPane.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        doc = chatPane.getStyledDocument();
+        JScrollPane scrollPane = new JScrollPane(chatPane);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Input panel
+        JPanel inputPanel = new JPanel(new BorderLayout(8, 0));
+        inputPanel.setBackground(new Color(40, 40, 40));
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        inputField = new JTextField();
+        inputField.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        inputField.setBackground(new Color(55, 55, 55));
+        inputField.setForeground(Color.WHITE);
+        inputField.setCaretColor(Color.WHITE);
+        inputField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(70, 70, 70)),
+            BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+
+        JButton sendBtn = new JButton("Send 📤");
+        sendBtn.setBackground(new Color(76, 175, 80));
+        sendBtn.setForeground(Color.WHITE);
+        sendBtn.setFocusPainted(false);
+        sendBtn.setBorderPainted(false);
+        sendBtn.setOpaque(true);
+        sendBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        sendBtn.setPreferredSize(new Dimension(80, 35));
+
+        inputPanel.add(inputField, BorderLayout.CENTER);
+        inputPanel.add(sendBtn, BorderLayout.EAST);
+        mainPanel.add(inputPanel, BorderLayout.SOUTH);
+
+        inputField.addActionListener(e -> processInput());
+        sendBtn.addActionListener(e -> processInput());
+
+        add(mainPanel);
+    }
+
+    private void processInput() {
+        String text = inputField.getText().trim();
+        if (text.isEmpty()) return;
+        inputField.setText("");
+        appendUser(text);
+
+        // Check if it's a command
+        if (parser.isCommand(text)) {
+            String response = commandHandler.handle(text, currentUser.getId(), currentUser.getDashboardToken());
+            appendSystem(response);
+            chatMessageDAO.save(new ChatMessage(currentUser.getId(), text, false));
             return;
         }
 
-        String html = buildLanding();
-        byte[] bytes = html.getBytes("UTF-8");
-        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=UTF-8");
-        exchange.sendResponseHeaders(200, bytes.length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(bytes);
-        os.close();
+        // Parse the message
+        ParseResult result = parser.parse(text);
+
+        if (!result.isTransaction()) {
+            // Not a transaction — save as chat
+            chatMessageDAO.save(new ChatMessage(currentUser.getId(), text, false));
+            appendSystem("📝 Got it. (Not recorded as a transaction)");
+            return;
+        }
+
+        // LOW confidence — ask user to pick category
+        if (result.getConfidence() == ParseResult.Confidence.LOW) {
+            showCategoryPicker(text, result);
+            return;
+        }
+
+        // HIGH confidence — show confirmation
+        showConfirmation(text, result);
     }
 
-    private String buildLanding() {
-        return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
-        "<meta name='viewport' content='width=device-width,initial-scale=1.0'>" +
-        "<meta property='og:title' content='SmartLedger'>" +
-        "<meta property='og:description' content='Record-keeping made simple. Type what you sold, we handle the rest.'>" +
-        "<meta property='og:image' content='https://raw.githubusercontent.com/Faith6544/SmartLedger/main/logo.png'>" +
-        "<meta property='og:url' content='https://smartledger-m28i.onrender.com'>" +
-        "<meta property='og:type' content='website'>" +
-        "<title>SmartLedger — Record-keeping made simple</title>" +
-        "<link rel='icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
-        "<link rel='shortcut icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
-        "<style>" +
-        "*{margin:0;padding:0;box-sizing:border-box;}" +
-        "body{font-family:'Segoe UI',sans-serif;color:#333;}" +
+    private void showConfirmation(String rawText, ParseResult result) {
+        String message = String.format(
+            "📋 Confirm Transaction\n\nCategory: %s\nAmount: ₦%,.2f\nDescription: %s%s\n\nIs this correct?",
+            result.getType(),
+            result.getAmount(),
+            rawText,
+            result.getCounterparty() != null ? "\nWho: " + result.getCounterparty() : ""
+        );
 
-        // Navbar
-        ".navbar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;position:sticky;top:0;z-index:100;}" +
-        ".navbar h1{color:#2e7d32;font-size:22px;}" +
-        ".navbar a{text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:600;font-size:14px;}" +
-        ".nav-login{color:#2e7d32;border:2px solid #2e7d32;margin-right:10px;}" +
-        ".nav-login:hover{background:#e8f5e9;}" +
-        ".nav-signup{background:#4CAF50;color:#fff;}" +
-        ".nav-signup:hover{background:#43A047;}" +
+        String[] options = {"✅ Confirm", "🔄 Change Category", "❌ Cancel"};
+        int choice = JOptionPane.showOptionDialog(this, message, "Confirm Transaction",
+            JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-        // Hero
-        ".hero{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;padding:100px 30px;text-align:center;}" +
-        ".hero h2{font-size:48px;font-weight:800;max-width:700px;margin:0 auto 20px;line-height:1.15;}" +
-        ".hero h2 span{color:#4CAF50;}" +
-        ".hero p{font-size:18px;color:#b0bec5;max-width:550px;margin:0 auto 40px;line-height:1.6;}" +
-        ".hero-cta{display:inline-block;background:#4CAF50;color:#fff;padding:16px 40px;border-radius:10px;text-decoration:none;font-size:17px;font-weight:700;}" +
-        ".hero-cta:hover{background:#43A047;}" +
-        ".hero-sub{margin-top:15px;color:#78909c;font-size:13px;}" +
+        if (choice == 0) {
+            // Confirm — save as is
+            saveTransaction(result, rawText);
+        } else if (choice == 1) {
+            // Change category
+            showCategoryPicker(rawText, result);
+        } else {
+            // Cancel
+            chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, false));
+            appendSystem("❌ Transaction cancelled.");
+        }
+    }
 
-        // How it works
-        ".how{padding:80px 30px;background:#fff;text-align:center;}" +
-        ".how h3{font-size:32px;margin-bottom:10px;color:#1a1a2e;}" +
-        ".how .sub{color:#888;margin-bottom:50px;font-size:16px;}" +
-        ".steps{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;max-width:900px;margin:0 auto;}" +
-        ".step{flex:1;min-width:220px;max-width:280px;text-align:center;}" +
-        ".step-num{width:50px;height:50px;background:#e8f5e9;color:#2e7d32;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin-bottom:15px;}" +
-        ".step h4{font-size:18px;margin-bottom:8px;color:#1a1a2e;}" +
-        ".step p{color:#666;font-size:14px;line-height:1.5;}" +
+    private void showCategoryPicker(String rawText, ParseResult result) {
+        TransactionType[] types = TransactionType.values();
+        String[] typeNames = new String[types.length];
+        for (int i = 0; i < types.length; i++) typeNames[i] = types[i].name();
 
-        // Features
-        ".features{padding:80px 30px;background:#f5f5f5;text-align:center;}" +
-        ".features h3{font-size:32px;margin-bottom:50px;color:#1a1a2e;}" +
-        ".feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;max-width:900px;margin:0 auto;}" +
-        ".feature-card{background:#fff;border-radius:12px;padding:30px;text-align:left;box-shadow:0 2px 12px rgba(0,0,0,0.06);}" +
-        ".feature-card .icon{font-size:30px;margin-bottom:12px;}" +
-        ".feature-card h4{font-size:17px;margin-bottom:8px;color:#1a1a2e;}" +
-        ".feature-card p{color:#666;font-size:14px;line-height:1.5;}" +
+        String message = String.format("💰 Amount: ₦%,.2f\n📝 Message: %s\n\nSelect the correct category:",
+            result.getAmount(), rawText);
 
-        // Example
-        ".example{padding:80px 30px;background:#fff;text-align:center;}" +
-        ".example h3{font-size:32px;margin-bottom:15px;color:#1a1a2e;}" +
-        ".example .sub{color:#888;margin-bottom:40px;font-size:16px;}" +
-        ".chat-demo{max-width:500px;margin:0 auto;background:#1a1a2e;border-radius:16px;padding:25px;text-align:left;}" +
-        ".chat-demo .msg{padding:10px 14px;margin:8px 0;border-radius:10px;font-size:14px;}" +
-        ".chat-demo .user-msg{background:#2e7d32;color:#fff;margin-left:40px;}" +
-        ".chat-demo .sys-msg{background:#16213e;color:#b0bec5;margin-right:40px;}" +
-        ".chat-demo .sys-msg b{color:#4CAF50;}" +
+        String picked = (String) JOptionPane.showInputDialog(this, message, "Select Category",
+            JOptionPane.QUESTION_MESSAGE, null, typeNames,
+            result.getType() != null ? result.getType().name() : typeNames[0]);
 
-        // CTA
-        ".cta{padding:80px 30px;background:linear-gradient(135deg,#2e7d32,#4CAF50);text-align:center;color:#fff;}" +
-        ".cta h3{font-size:32px;margin-bottom:15px;}" +
-        ".cta p{font-size:16px;opacity:0.9;margin-bottom:30px;}" +
-        ".cta a{display:inline-block;background:#fff;color:#2e7d32;padding:16px 40px;border-radius:10px;text-decoration:none;font-size:17px;font-weight:700;}" +
-        ".cta a:hover{background:#f5f5f5;}" +
+        if (picked != null) {
+            result.setType(TransactionType.valueOf(picked));
+            result.setConfidence(ParseResult.Confidence.HIGH);
+            saveTransaction(result, rawText);
+        } else {
+            chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, false));
+            appendSystem("❌ Transaction cancelled.");
+        }
+    }
 
-        // Footer
-        ".footer{padding:30px;background:#1a1a2e;text-align:center;color:#666;font-size:13px;}" +
-        ".footer a{color:#4CAF50;text-decoration:none;}" +
+    private void saveTransaction(ParseResult result, String rawText) {
+        Transaction txn = new Transaction(currentUser.getId(), result.getType(),
+            result.getAmount(), rawText, result.getCounterparty());
+        transactionDAO.save(txn);
+        chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, true));
 
-        // SDG badges
-        ".sdg{display:flex;justify-content:center;gap:15px;margin-top:20px;}" +
-        ".sdg-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}" +
-        ".sdg8{background:#93132a;color:#fff;}" +
-        ".sdg9{background:#f36d25;color:#fff;}" +
+        String confirm = String.format("✅ Recorded %s: ₦%,.2f", result.getType(), result.getAmount());
+        if (result.getCounterparty() != null) confirm += " (" + result.getCounterparty() + ")";
+        appendSystem(confirm);
+    }
 
-        // Mobile
-        "@media(max-width:600px){.hero h2{font-size:30px;}.hero{padding:60px 20px;}.steps{flex-direction:column;align-items:center;}.navbar{padding:10px 15px;}.navbar a{padding:8px 14px;font-size:12px;}}" +
-        "</style></head><body>" +
+    private void appendUser(String text) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+        appendColored("You [" + time + "]: ", new Color(100, 181, 246));
+        appendColored(text + "\n", Color.WHITE);
+    }
 
-        // Navbar
-        "<div class='navbar'>" +
-        "<div style='display:flex;align-items:center;gap:8px;'><div style='width:32px;height:32px;background:#c6edc3;border:2px solid #1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;'><img src='" + HtmlTemplates.LOGO_DATA + "' style='width:20px;height:20px;'></div><h1>SmartLedger</h1></div>" +
-        "<div>" +
-        "<a href='/auth/login' class='nav-login'>Login</a>" +
-        "<a href='/auth/signup' class='nav-signup'>Sign Up</a>" +
-        "</div></div>" +
+    private void appendSystem(String text) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+        appendColored("🤖 SmartLedger [" + time + "]: ", new Color(76, 175, 80));
+        appendColored(text + "\n\n", new Color(200, 200, 200));
+    }
 
-        // Hero
-        "<div class='hero'>" +
-        "<h2>Type what you sold.<br><span>We handle the rest.</span></h2>" +
-        "<p>SmartLedger lets small business owners record sales, expenses, and debts by typing naturally — like sending a message. No forms. No accounting knowledge needed.</p>" +
-        "<a href='/auth/signup' class='hero-cta'>Start Recording Free</a>" +
-        "<p class='hero-sub'>No downloads. No credit card. Just type and go.</p>" +
-        "<div class='sdg'><span class='sdg-badge sdg8'>SDG 8 — Decent Work</span><span class='sdg-badge sdg9'>SDG 9 — Innovation</span></div>" +
-        "</div>" +
+    private void appendColored(String text, Color color) {
+        SimpleAttributeSet attrs = new SimpleAttributeSet();
+        StyleConstants.setForeground(attrs, color);
+        StyleConstants.setFontFamily(attrs, "SansSerif");
+        StyleConstants.setFontSize(attrs, 14);
+        try {
+            doc.insertString(doc.getLength(), text, attrs);
+            chatPane.setCaretPosition(doc.getLength());
+        } catch (BadLocationException e) { e.printStackTrace(); }
+    }
 
-        // How it works
-        "<div class='how'>" +
-        "<h3>How It Works</h3>" +
-        "<p class='sub'>Three steps. That's all.</p>" +
-        "<div class='steps'>" +
-        "<div class='step'><div class='step-num'>1</div><h4>Type What Happened</h4><p>\"Sold 5 bags of rice for &#8358;100,000\" — type it exactly how you'd say it.</p></div>" +
-        "<div class='step'><div class='step-num'>2</div><h4>We Categorize It</h4><p>SmartLedger reads your message and automatically sorts it as a sale, expense, debt, or payment.</p></div>" +
-        "<div class='step'><div class='step-num'>3</div><h4>See Your Dashboard</h4><p>Everything organized — sales, expenses, profits, and who owes you — in one clean view.</p></div>" +
-        "</div></div>" +
-
-        // Chat demo
-        "<div class='example'>" +
-        "<h3>Just Like Chatting</h3>" +
-        "<p class='sub'>No forms to fill. No fields to learn. Just type.</p>" +
-        "<div class='chat-demo'>" +
-        "<div class='msg user-msg'>Sold 5 bags of rice for &#8358;100,000</div>" +
-        "<div class='msg sys-msg'><b>SALE</b> recorded — &#8358;100,000.00</div>" +
-        "<div class='msg user-msg'>Oga Musa owes me &#8358;12,000</div>" +
-        "<div class='msg sys-msg'><b>DEBT</b> recorded — &#8358;12,000.00 (Oga Musa)</div>" +
-        "<div class='msg user-msg'>Paid &#8358;5,000 for transport</div>" +
-        "<div class='msg sys-msg'><b>EXPENSE</b> recorded — &#8358;5,000.00</div>" +
-        "<div class='msg user-msg'>What's my profit?</div>" +
-        "<div class='msg sys-msg'>Profit: <b>&#8358;95,000.00</b></div>" +
-        "</div></div>" +
-
-        // Features
-        "<div class='features'>" +
-        "<h3>Built for Nigerian Traders</h3>" +
-        "<div class='feature-grid'>" +
-        "<div class='feature-card'><div class='icon'>&#128172;</div><h4>Chat-Style Input</h4><p>Type transactions like you're sending a message. Pidgin, English, shorthand — it understands.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128202;</div><h4>Live Dashboard</h4><p>See sales, expenses, debts, and profit at a glance. Filter by date, type, or person.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128176;</div><h4>Debt Tracking</h4><p>Know exactly who owes you and how much. Get notified when payments come in.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#9989;</div><h4>Smart Confirmation</h4><p>Every entry gets confirmed before saving. Wrong category? Change it in one tap.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128241;</div><h4>Works on Phone</h4><p>No app to download. Open in any browser on your phone and start recording.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128274;</div><h4>Your Data, Private</h4><p>Each trader gets their own secure dashboard. Only you can see your records.</p></div>" +
-        "</div></div>" +
-
-        // CTA
-        "<div class='cta'>" +
-        "<h3>Stop Losing Track of Your Money</h3>" +
-        "<p>Join traders who are ditching notebooks for something smarter.</p>" +
-        "<a href='/auth/signup'>Create Your Free Account</a>" +
-        "</div>" +
-
-        // Footer
-        "<div class='footer'>" +
-        "<p>SmartLedger &#169; 2026 &#8212; COS 202 Group 22</p>" +
-        "<p style='margin-top:8px;'><a href='/auth/login'>Login</a> &middot; <a href='/auth/signup'>Sign Up</a></p>" +
-        "</div>" +
-
-        "</body></html>";
+    private void startDashboard(int port) {
+        try {
+            dashboardServer = new DashboardServer(port);
+            dashboardServer.start();
+            dashboardStarted = true;
+            System.out.println("✅ Dashboard server started on port " + port);
+        } catch (Exception e) {
+            System.out.println("⚠️ Dashboard server failed to start on port " + port + ": " + e.getMessage());
+            dashboardStarted = false;
+            // Try alternative port
+            try {
+                int altPort = 8082;
+                dashboardServer = new DashboardServer(altPort);
+                dashboardServer.start();
+                dashboardStarted = true;
+                System.out.println("✅ Dashboard server started on port " + altPort);
+            } catch (Exception e2) {
+                System.out.println("❌ Dashboard server failed on alternative port too.");
+                dashboardStarted = false;
+            }
+        }
     }
 }

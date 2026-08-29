@@ -2,67 +2,127 @@ package database;
 
 import model.User;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO {
-
-    public UserDAO() { migrate(); }
-
-    private void migrate() {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            DatabaseMetaData md = conn.getMetaData();
-            ResultSet rs = md.getColumns(null, null, "users", "business_name");
-            if (!rs.next()) {
-                conn.createStatement().execute("ALTER TABLE users ADD COLUMN business_name VARCHAR(100) DEFAULT NULL");
-                System.out.println("Added business_name column to users table");
-            }
-        } catch (SQLException e) { /* column might already exist */ }
-    }
-
-    public boolean createUser(User user) {
-        String sql = "INSERT INTO users (username, password_hash, dashboard_token, business_name) VALUES (?, ?, ?, ?)";
+    
+    public void save(User user) {
+        String sql = "INSERT INTO users (username, dashboard_token, password) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getPasswordHash());
-            stmt.setString(3, user.getDashboardToken());
-            stmt.setString(4, user.getBusinessName().isEmpty() ? null : user.getBusinessName());
-            stmt.executeUpdate();
-            ResultSet keys = stmt.getGeneratedKeys();
-            if (keys.next()) user.setId(keys.getInt(1));
-            return true;
-        } catch (SQLException e) { return false; }
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, user.getUsername());
+            pstmt.setString(2, user.getDashboardToken());
+            pstmt.setString(3, user.getPassword() != null ? user.getPassword() : "password");
+            pstmt.executeUpdate();
+            
+            ResultSet rs = pstmt.getGeneratedKeys();
+            if (rs.next()) {
+                user.setId(rs.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public User login(String username, String password) {
+    public User findById(int id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return extractUser(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, username);
-            ResultSet rs = stmt.executeQuery();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                User user = fromRS(rs);
-                if (user.checkPassword(password)) return user;
+                return extractUser(rs);
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
-    public User getUserByToken(String token) {
+    public User findByToken(String token) {
         String sql = "SELECT * FROM users WHERE dashboard_token = ?";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, token);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return fromRS(rs);
-        } catch (SQLException e) { e.printStackTrace(); }
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, token);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return extractUser(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
-    private User fromRS(ResultSet rs) throws SQLException {
-        String biz = null;
-        try { biz = rs.getString("business_name"); } catch (SQLException e) { }
-        return new User(rs.getInt("id"), rs.getString("username"),
-            rs.getString("password_hash"), rs.getString("dashboard_token"),
-            biz, rs.getTimestamp("created_at"));
+    public List<User> findAll() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                users.add(extractUser(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    public boolean updateUser(User user) {
+        String sql = "UPDATE users SET username = ?, dashboard_token = ?, password = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, user.getUsername());
+            pstmt.setString(2, user.getDashboardToken());
+            pstmt.setString(3, user.getPassword());
+            pstmt.setInt(4, user.getId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteUser(int id) {
+        String sql = "DELETE FROM users WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private User extractUser(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setId(rs.getInt("id"));
+        user.setUsername(rs.getString("username"));
+        user.setDashboardToken(rs.getString("dashboard_token"));
+        // Password column might not exist yet - handle gracefully
+        try {
+            user.setPassword(rs.getString("password"));
+        } catch (SQLException e) {
+            user.setPassword("password"); // default
+        }
+        return user;
     }
 }
