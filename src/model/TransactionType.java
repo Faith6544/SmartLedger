@@ -5,5 +5,6 @@ public enum TransactionType {
     EXPENSE,
     SUPPLY,
     DEBT,
-    PAYMENT
+    PAYMENT,
+    DELIVERY
 }

@@ -16,7 +16,7 @@ public class LoginWindow extends JFrame {
 
     public LoginWindow() {
         userDAO = new UserDAO();
-        
+
         setTitle("SmartLedger");
         setSize(450, 580);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -32,11 +32,11 @@ public class LoginWindow extends JFrame {
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                 // Slightly off-center gradient
-                GradientPaint gp = new GradientPaint(10, 20, new Color(20, 18, 35), 
+                GradientPaint gp = new GradientPaint(10, 20, new Color(20, 18, 35),
                                                       getWidth() - 10, getHeight() - 20, new Color(35, 30, 55));
                 g2d.setPaint(gp);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
-                
+
                 // Some subtle random dots (human touch)
                 g2d.setColor(new Color(60, 55, 80, 30));
                 for (int i = 0; i < 30; i++) {
@@ -48,14 +48,14 @@ public class LoginWindow extends JFrame {
         };
         mainPanel.setLayout(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(35, 35, 35, 35));
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(4, 0, 4, 0);
 
         // Logo - slightly off-center
-        JLabel titleLabel = new JLabel("📊 SmartLedger", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("SmartLedger", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
         titleLabel.setForeground(new Color(100, 210, 120));
         gbc.insets = new Insets(0, 0, 2, 0);
@@ -83,7 +83,6 @@ public class LoginWindow extends JFrame {
             BorderFactory.createLineBorder(new Color(70, 68, 88)),
             BorderFactory.createEmptyBorder(10, 12, 10, 12)
         ));
-        usernameField.setText("testuser");
         gbc.insets = new Insets(0, 0, 12, 0);
         mainPanel.add(usernameField, gbc);
 
@@ -103,7 +102,6 @@ public class LoginWindow extends JFrame {
             BorderFactory.createLineBorder(new Color(70, 68, 88)),
             BorderFactory.createEmptyBorder(10, 12, 10, 12)
         ));
-        passwordField.setText("password");
         gbc.insets = new Insets(0, 0, 12, 0);
         mainPanel.add(passwordField, gbc);
 
@@ -148,17 +146,9 @@ public class LoginWindow extends JFrame {
 
         buttonPanel.add(loginBtn);
         buttonPanel.add(signupBtn);
-        
+
         gbc.insets = new Insets(5, 0, 8, 0);
         mainPanel.add(buttonPanel, gbc);
-
-        // Help text - casual tone
-        JLabel helpLabel = new JLabel("demo: testuser / password");
-        helpLabel.setFont(new Font("Arial", Font.PLAIN, 11));
-        helpLabel.setForeground(new Color(130, 130, 150));
-        helpLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        gbc.insets = new Insets(12, 0, 0, 0);
-        mainPanel.add(helpLabel, gbc);
 
         // Button listeners
         loginBtn.addActionListener(e -> login());
@@ -174,51 +164,32 @@ public class LoginWindow extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter both username and password", 
-                "Hold on", 
+            JOptionPane.showMessageDialog(this,
+                "Please enter both username and password",
+                "Hold on",
                 JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Demo login - works without database
-        if (username.equals("testuser") && password.equals("password")) {
-            JOptionPane.showMessageDialog(this, 
-                "Hey " + username + "! Welcome back.", 
-                "Welcome", 
-                JOptionPane.INFORMATION_MESSAGE);
-            User user = new User(1, username, "test123-dashboard-token", password);
-            openChatWindow(user);
-            return;
-        }
-
-        // Try real login
+        // Real login against the database - no demo bypass, no silent fallback.
+        // Any real error (DB down, bad connection) shows an actual error instead of
+        // quietly logging you in as a fake account.
         try {
-            User user = userDAO.findByUsername(username);
+            User user = userDAO.login(username, password);
             if (user == null) {
-                JOptionPane.showMessageDialog(this, 
-                    "Hmm, '" + username + "' not found. Want to sign up?", 
-                    "Not found", 
-                    JOptionPane.QUESTION_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                    "Invalid username or password.",
+                    "Login failed",
+                    JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-            if (password.equals(user.getPassword())) {
-                JOptionPane.showMessageDialog(this, 
-                    "Welcome back " + username + "! 👋", 
-                    "Success", 
-                    JOptionPane.INFORMATION_MESSAGE);
-                openChatWindow(user);
-            } else {
-                JOptionPane.showMessageDialog(this, 
-                    "Wrong password. Try again?", 
-                    "Oops", 
-                    JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (Exception e) {
-            // Fallback - use demo
-            User user = new User(1, "testuser", "test123-dashboard-token", "password");
             openChatWindow(user);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Couldn't reach the database: " + e.getMessage() +
+                "\n\nMake sure MySQL is running and DB_PASS is set correctly.",
+                "Connection error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -227,24 +198,36 @@ public class LoginWindow extends JFrame {
         String password = new String(passwordField.getPassword());
         String businessName = businessNameField.getText().trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, 
-                "Username and password are required", 
-                "Hold on", 
+        if (username.isEmpty() || password.length() < 4) {
+            JOptionPane.showMessageDialog(this,
+                "Username required. Password must be at least 4 characters.",
+                "Hold on",
                 JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // Demo signup - works without database
-        JOptionPane.showMessageDialog(this, 
-            "✅ Account created!\nUsername: " + username + 
-            "\nBusiness: " + (businessName.isEmpty() ? "not set" : businessName),
-            "All set!", 
-            JOptionPane.INFORMATION_MESSAGE);
-        
-        User user = new User(1, username, username + "-token-" + System.currentTimeMillis(), password);
-        user.setBusinessName(businessName);
-        openChatWindow(user);
+        try {
+            User user = new User(username, password, businessName);
+            if (userDAO.createUser(user)) {
+                JOptionPane.showMessageDialog(this,
+                    "Account created!\nUsername: " + username +
+                    "\nBusiness: " + (businessName.isEmpty() ? "not set" : businessName),
+                    "All set!",
+                    JOptionPane.INFORMATION_MESSAGE);
+                openChatWindow(user);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "That username is already taken. Try another.",
+                    "Signup failed",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Couldn't reach the database: " + e.getMessage() +
+                "\n\nMake sure MySQL is running and DB_PASS is set correctly.",
+                "Connection error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void openChatWindow(User user) {

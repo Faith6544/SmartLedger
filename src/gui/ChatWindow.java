@@ -31,7 +31,6 @@ public class ChatWindow extends JFrame {
 
     private boolean dashboardStarted = false;
 
-    // Constructor with User
     public ChatWindow(User user) {
         this.currentUser = user;
         this.parser = new MessageParser();
@@ -44,34 +43,17 @@ public class ChatWindow extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Try to start dashboard on port 8081 (avoid conflict)
-        startDashboard(8081);
-
+        startDashboard();
         buildUI();
 
         appendSystem("Welcome to SmartLedger, " + user.getUsername() + "!");
         appendSystem("Type your transactions naturally, or type \"help\" to see commands.");
         if (dashboardStarted) {
-            appendSystem("📊 Dashboard: http://localhost:" + getDashboardPort() + "/dashboard/" + user.getDashboardToken());
+            appendSystem("Dashboard: http://localhost:8080/dashboard/" + user.getDashboardToken());
         } else {
-            appendSystem("⚠️ Dashboard link unavailable right now — port 8081 may already be in use.");
-            appendSystem("💡 Try running WebApp separately on a different port.");
+            appendSystem("Dashboard link unavailable right now - port 8080 may already be in use by another SmartLedger window. Close it and restart to get your dashboard link.");
         }
         appendSystem("--------------------------------------------");
-    }
-
-    // Default constructor for testing (no User required)
-    public ChatWindow() {
-        this(createDefaultUser());
-    }
-
-    private static User createDefaultUser() {
-        // Create a default user for testing
-        return new User(1, "testuser", "test123-dashboard-token");
-    }
-
-    private int getDashboardPort() {
-        return 8081;
     }
 
     private void buildUI() {
@@ -113,7 +95,7 @@ public class ChatWindow extends JFrame {
             BorderFactory.createEmptyBorder(8, 10, 8, 10)
         ));
 
-        JButton sendBtn = new JButton("Send 📤");
+        JButton sendBtn = new JButton("Send");
         sendBtn.setBackground(new Color(76, 175, 80));
         sendBtn.setForeground(Color.WHITE);
         sendBtn.setFocusPainted(false);
@@ -150,37 +132,38 @@ public class ChatWindow extends JFrame {
         ParseResult result = parser.parse(text);
 
         if (!result.isTransaction()) {
-            // Not a transaction — save as chat
+            // Not a transaction - save as chat
             chatMessageDAO.save(new ChatMessage(currentUser.getId(), text, false));
-            appendSystem("📝 Got it. (Not recorded as a transaction)");
+            String[] casualReplies = {"Got it.", "Noted!", "Alright.", "Okay, noted.", "Gotcha."};
+            appendSystem(casualReplies[(int) (Math.random() * casualReplies.length)]);
             return;
         }
 
-        // LOW confidence — ask user to pick category
+        // LOW confidence - ask user to pick category
         if (result.getConfidence() == ParseResult.Confidence.LOW) {
             showCategoryPicker(text, result);
             return;
         }
 
-        // HIGH confidence — show confirmation
+        // HIGH confidence - show confirmation
         showConfirmation(text, result);
     }
 
     private void showConfirmation(String rawText, ParseResult result) {
         String message = String.format(
-            "📋 Confirm Transaction\n\nCategory: %s\nAmount: ₦%,.2f\nDescription: %s%s\n\nIs this correct?",
+            "Confirm Transaction\n\nCategory: %s\nAmount: N%,.2f\nDescription: %s%s\n\nIs this correct?",
             result.getType(),
             result.getAmount(),
             rawText,
             result.getCounterparty() != null ? "\nWho: " + result.getCounterparty() : ""
         );
 
-        String[] options = {"✅ Confirm", "🔄 Change Category", "❌ Cancel"};
+        String[] options = {"Confirm", "Change Category", "Cancel"};
         int choice = JOptionPane.showOptionDialog(this, message, "Confirm Transaction",
             JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
         if (choice == 0) {
-            // Confirm — save as is
+            // Confirm - save as is
             saveTransaction(result, rawText);
         } else if (choice == 1) {
             // Change category
@@ -188,7 +171,7 @@ public class ChatWindow extends JFrame {
         } else {
             // Cancel
             chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, false));
-            appendSystem("❌ Transaction cancelled.");
+            appendSystem("Transaction cancelled.");
         }
     }
 
@@ -197,7 +180,7 @@ public class ChatWindow extends JFrame {
         String[] typeNames = new String[types.length];
         for (int i = 0; i < types.length; i++) typeNames[i] = types[i].name();
 
-        String message = String.format("💰 Amount: ₦%,.2f\n📝 Message: %s\n\nSelect the correct category:",
+        String message = String.format("Amount: N%,.2f\nMessage: %s\n\nSelect the correct category:",
             result.getAmount(), rawText);
 
         String picked = (String) JOptionPane.showInputDialog(this, message, "Select Category",
@@ -210,7 +193,7 @@ public class ChatWindow extends JFrame {
             saveTransaction(result, rawText);
         } else {
             chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, false));
-            appendSystem("❌ Transaction cancelled.");
+            appendSystem("Transaction cancelled.");
         }
     }
 
@@ -220,7 +203,7 @@ public class ChatWindow extends JFrame {
         transactionDAO.save(txn);
         chatMessageDAO.save(new ChatMessage(currentUser.getId(), rawText, true));
 
-        String confirm = String.format("✅ Recorded %s: ₦%,.2f", result.getType(), result.getAmount());
+        String confirm = String.format("Recorded %s: N%,.2f", result.getType(), result.getAmount());
         if (result.getCounterparty() != null) confirm += " (" + result.getCounterparty() + ")";
         appendSystem(confirm);
     }
@@ -233,7 +216,7 @@ public class ChatWindow extends JFrame {
 
     private void appendSystem(String text) {
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-        appendColored("🤖 SmartLedger [" + time + "]: ", new Color(76, 175, 80));
+        appendColored("SmartLedger [" + time + "]: ", new Color(76, 175, 80));
         appendColored(text + "\n\n", new Color(200, 200, 200));
     }
 
@@ -248,26 +231,14 @@ public class ChatWindow extends JFrame {
         } catch (BadLocationException e) { e.printStackTrace(); }
     }
 
-    private void startDashboard(int port) {
+    private void startDashboard() {
         try {
-            dashboardServer = new DashboardServer(port);
+            dashboardServer = new DashboardServer(8080);
             dashboardServer.start();
             dashboardStarted = true;
-            System.out.println("✅ Dashboard server started on port " + port);
         } catch (Exception e) {
-            System.out.println("⚠️ Dashboard server failed to start on port " + port + ": " + e.getMessage());
+            System.out.println("Dashboard server failed to start: " + e.getMessage());
             dashboardStarted = false;
-            // Try alternative port
-            try {
-                int altPort = 8082;
-                dashboardServer = new DashboardServer(altPort);
-                dashboardServer.start();
-                dashboardStarted = true;
-                System.out.println("✅ Dashboard server started on port " + altPort);
-            } catch (Exception e2) {
-                System.out.println("❌ Dashboard server failed on alternative port too.");
-                dashboardStarted = false;
-            }
         }
     }
 }

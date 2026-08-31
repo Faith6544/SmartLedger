@@ -2,14 +2,13 @@ package dashboard;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import database.UserDAO;
 import database.TransactionDAO;
-import model.User;
-
+import database.UserDAO;
 import java.io.*;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import model.User;
 
 public class AuthHandler implements HttpHandler {
 

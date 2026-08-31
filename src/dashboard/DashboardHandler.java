@@ -59,6 +59,7 @@ public class DashboardHandler implements HttpHandler {
         double supplies = transactionDAO.getTotalByType(uid, TransactionType.SUPPLY);
         double debts = transactionDAO.getTotalByType(uid, TransactionType.DEBT);
         double payments = transactionDAO.getTotalByType(uid, TransactionType.PAYMENT);
+        double deliveries = transactionDAO.getTotalByType(uid, TransactionType.DELIVERY);
         double profit = sales - expenses - supplies;
 
         double todaySales = transactionDAO.getTodayTotalByType(uid, TransactionType.SALE);
@@ -99,6 +100,7 @@ public class DashboardHandler implements HttpHandler {
         h.append(HtmlTemplates.card("Total Supplies", supplies, "supplies"));
         h.append(HtmlTemplates.card("Debts Owed", debts, "debts"));
         h.append(HtmlTemplates.card("Payments In", payments, "payments"));
+        h.append(HtmlTemplates.card("Deliveries", deliveries, "deliveries"));
         String profitClass = profit >= 0 ? "profit" : "profit negative";
         h.append("<div class='card ").append(profitClass).append(" fade-in'><h3>Profit</h3>");
         h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
@@ -179,11 +181,11 @@ public class DashboardHandler implements HttpHandler {
 
         // Category tabs
         h.append("<div class='cat-tabs'>");
-        String[] tabs = {"ALL", "SALE", "EXPENSE", "SUPPLY", "DEBT", "PAYMENT"};
+        String[] tabs = {"ALL", "SALE", "EXPENSE", "SUPPLY", "DEBT", "PAYMENT", "DELIVERY"};
         for (String tab : tabs) {
             String active = (tab.equals(typeFilter) || (tab.equals("ALL") && (typeFilter == null || typeFilter.equals("ALL")))) ? " active t-" + tab : " t-" + tab;
             String href = tab.equals("ALL") ? "/dashboard/" + token + "/transactions" : "/dashboard/" + token + "/transactions?type=" + tab;
-            // fromDate/toDate come straight from the URL query string — escape before writing into an href attribute
+            // fromDate/toDate come straight from the URL query string - escape before writing into an href attribute
             if (fromDate != null && !fromDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "from=" + HtmlTemplates.escapeHtml(fromDate);
             if (toDate != null && !toDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "to=" + HtmlTemplates.escapeHtml(toDate);
             h.append("<a href='").append(href).append("' class='cat-tab").append(active).append("'>").append(tab).append("</a>");
@@ -192,7 +194,7 @@ public class DashboardHandler implements HttpHandler {
 
         // Date filter
         h.append("<form class='filter-bar' method='GET' action='/dashboard/").append(token).append("/transactions'>");
-        // type/from/to are user-controlled (URL query string) — must be escaped before landing in an HTML attribute,
+        // type/from/to are user-controlled (URL query string) - must be escaped before landing in an HTML attribute,
         // otherwise ?type='><script>...</script> breaks out of the value='' attribute and runs in the trader's session
         if (typeFilter != null && !typeFilter.equals("ALL")) h.append("<input type='hidden' name='type' value='").append(HtmlTemplates.escapeHtml(typeFilter)).append("'>");
         h.append("<input type='date' name='from' value='").append(HtmlTemplates.escapeHtml(fromDate != null ? fromDate : "")).append("' placeholder='From'>");
@@ -245,8 +247,8 @@ public class DashboardHandler implements HttpHandler {
                 h.append("<td>").append(HtmlTemplates.badge(txn.getType().name())).append("</td>");
                 h.append("<td style='font-weight:600;'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</td>");
                 h.append("<td>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</td>");
-                h.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "—").append("</td>");
-                h.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "—").append("</td>");
+                h.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "-").append("</td>");
+                h.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "-").append("</td>");
                 h.append("</tr>");
             }
             h.append("</table></div>");
@@ -334,8 +336,8 @@ public class DashboardHandler implements HttpHandler {
             t.append("<td>").append(HtmlTemplates.badge(txn.getType().name())).append("</td>");
             t.append("<td style='font-weight:600;'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</td>");
             t.append("<td>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</td>");
-            t.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "—").append("</td>");
-            t.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "—").append("</td>");
+            t.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "-").append("</td>");
+            t.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "-").append("</td>");
 
             if (showActions) {
                 t.append("<td>");

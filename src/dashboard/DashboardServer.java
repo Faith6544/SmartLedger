@@ -7,10 +7,8 @@ import java.util.concurrent.Executors;
 public class DashboardServer {
 
     private HttpServer server;
-    private int port;
 
     public DashboardServer(int port) throws Exception {
-        this.port = port;
         server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new LandingHandler());
         server.createContext("/dashboard/", new DashboardHandler());
@@ -19,16 +17,13 @@ public class DashboardServer {
         server.createContext("/auth/", new AuthHandler());
         server.createContext("/analysis/", new AnalysisHandler());
         server.createContext("/report/", new ReportHandler());
-        server.setExecutor(Executors.newFixedThreadPool(10));
+        server.setExecutor(Executors.newFixedThreadPool(10)); // was null - one request at a time before this
     }
 
     public void start() {
         server.start();
-        System.out.println("✅ SmartLedger running at http://localhost:" + port + "/");
-        System.out.println("📊 Dashboard: http://localhost:" + port + "/dashboard/test123-dashboard-token");
+        System.out.println("SmartLedger running at http://localhost:8080/");
     }
 
-    public void stop() { 
-        server.stop(0); 
-    }
+    public void stop() { server.stop(0); }
 }

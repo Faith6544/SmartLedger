@@ -59,7 +59,7 @@ public class AnalysisHandler implements HttpHandler {
                 periodLabel = "Last Month";
                 break;
             case "custom":
-                // customFrom/customTo come from the URL query string — a malformed date here
+                // customFrom/customTo come from the URL query string - a malformed date here
                 // used to throw an uncaught DateTimeParseException and crash the whole page.
                 LocalDate parsedFrom = parseDateOrNull(customFrom);
                 LocalDate parsedTo = parseDateOrNull(customTo);
@@ -113,7 +113,7 @@ public class AnalysisHandler implements HttpHandler {
         h.append("<div class='container'>");
 
         // Title
-        h.append("<div class='section'><h2>Business Analysis — ").append(periodLabel).append("</h2>");
+        h.append("<div class='section'><h2>Business Analysis - ").append(periodLabel).append("</h2>");
 
         // Period selector
         h.append("<div class='period-bar'>");
@@ -287,7 +287,7 @@ public class AnalysisHandler implements HttpHandler {
                 "danger"));
         } else {
             advice.append(adviceCard("Break Even",
-                "You broke even — no profit, no loss. Look for ways to increase sales or reduce costs.", "warning"));
+                "You broke even - no profit, no loss. Look for ways to increase sales or reduce costs.", "warning"));
         }
 
         // Expense ratio

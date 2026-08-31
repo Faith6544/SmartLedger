@@ -11,7 +11,7 @@ public class LandingHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
 
-        // Only handle exact root path — let other handlers handle their paths
+        // Only handle exact root path - let other handlers handle their paths
         if (!path.equals("/")) {
             exchange.sendResponseHeaders(404, -1);
             return;
@@ -34,7 +34,7 @@ public class LandingHandler implements HttpHandler {
         "<meta property='og:image' content='https://raw.githubusercontent.com/Faith6544/SmartLedger/main/logo.png'>" +
         "<meta property='og:url' content='https://smartledger-m28i.onrender.com'>" +
         "<meta property='og:type' content='website'>" +
-        "<title>SmartLedger — Record-keeping made simple</title>" +
+        "<title>SmartLedger - Record-keeping made simple</title>" +
         "<link rel='icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
         "<link rel='shortcut icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
         "<style>" +
@@ -120,10 +120,10 @@ public class LandingHandler implements HttpHandler {
         // Hero
         "<div class='hero'>" +
         "<h2>Type what you sold.<br><span>We handle the rest.</span></h2>" +
-        "<p>SmartLedger lets small business owners record sales, expenses, and debts by typing naturally — like sending a message. No forms. No accounting knowledge needed.</p>" +
+        "<p>SmartLedger lets small business owners record sales, expenses, and debts by typing naturally - like sending a message. No forms. No accounting knowledge needed.</p>" +
         "<a href='/auth/signup' class='hero-cta'>Start Recording Free</a>" +
         "<p class='hero-sub'>No downloads. No credit card. Just type and go.</p>" +
-        "<div class='sdg'><span class='sdg-badge sdg8'>SDG 8 — Decent Work</span><span class='sdg-badge sdg9'>SDG 9 — Innovation</span></div>" +
+        "<div class='sdg'><span class='sdg-badge sdg8'>SDG 8 - Decent Work</span><span class='sdg-badge sdg9'>SDG 9 - Innovation</span></div>" +
         "</div>" +
 
         // How it works
@@ -131,9 +131,9 @@ public class LandingHandler implements HttpHandler {
         "<h3>How It Works</h3>" +
         "<p class='sub'>Three steps. That's all.</p>" +
         "<div class='steps'>" +
-        "<div class='step'><div class='step-num'>1</div><h4>Type What Happened</h4><p>\"Sold 5 bags of rice for &#8358;100,000\" — type it exactly how you'd say it.</p></div>" +
+        "<div class='step'><div class='step-num'>1</div><h4>Type What Happened</h4><p>\"Sold 5 bags of rice for &#8358;100,000\" - type it exactly how you'd say it.</p></div>" +
         "<div class='step'><div class='step-num'>2</div><h4>We Categorize It</h4><p>SmartLedger reads your message and automatically sorts it as a sale, expense, debt, or payment.</p></div>" +
-        "<div class='step'><div class='step-num'>3</div><h4>See Your Dashboard</h4><p>Everything organized — sales, expenses, profits, and who owes you — in one clean view.</p></div>" +
+        "<div class='step'><div class='step-num'>3</div><h4>See Your Dashboard</h4><p>Everything organized - sales, expenses, profits, and who owes you - in one clean view.</p></div>" +
         "</div></div>" +
 
         // Chat demo
@@ -142,11 +142,11 @@ public class LandingHandler implements HttpHandler {
         "<p class='sub'>No forms to fill. No fields to learn. Just type.</p>" +
         "<div class='chat-demo'>" +
         "<div class='msg user-msg'>Sold 5 bags of rice for &#8358;100,000</div>" +
-        "<div class='msg sys-msg'><b>SALE</b> recorded — &#8358;100,000.00</div>" +
+        "<div class='msg sys-msg'><b>SALE</b> recorded - &#8358;100,000.00</div>" +
         "<div class='msg user-msg'>Oga Musa owes me &#8358;12,000</div>" +
-        "<div class='msg sys-msg'><b>DEBT</b> recorded — &#8358;12,000.00 (Oga Musa)</div>" +
+        "<div class='msg sys-msg'><b>DEBT</b> recorded - &#8358;12,000.00 (Oga Musa)</div>" +
         "<div class='msg user-msg'>Paid &#8358;5,000 for transport</div>" +
-        "<div class='msg sys-msg'><b>EXPENSE</b> recorded — &#8358;5,000.00</div>" +
+        "<div class='msg sys-msg'><b>EXPENSE</b> recorded - &#8358;5,000.00</div>" +
         "<div class='msg user-msg'>What's my profit?</div>" +
         "<div class='msg sys-msg'>Profit: <b>&#8358;95,000.00</b></div>" +
         "</div></div>" +
@@ -155,7 +155,7 @@ public class LandingHandler implements HttpHandler {
         "<div class='features'>" +
         "<h3>Built for Nigerian Traders</h3>" +
         "<div class='feature-grid'>" +
-        "<div class='feature-card'><div class='icon'>&#128172;</div><h4>Chat-Style Input</h4><p>Type transactions like you're sending a message. Pidgin, English, shorthand — it understands.</p></div>" +
+        "<div class='feature-card'><div class='icon'>&#128172;</div><h4>Chat-Style Input</h4><p>Type transactions like you're sending a message. Pidgin, English, shorthand - it understands.</p></div>" +
         "<div class='feature-card'><div class='icon'>&#128202;</div><h4>Live Dashboard</h4><p>See sales, expenses, debts, and profit at a glance. Filter by date, type, or person.</p></div>" +
         "<div class='feature-card'><div class='icon'>&#128176;</div><h4>Debt Tracking</h4><p>Know exactly who owes you and how much. Get notified when payments come in.</p></div>" +
         "<div class='feature-card'><div class='icon'>&#9989;</div><h4>Smart Confirmation</h4><p>Every entry gets confirmed before saving. Wrong category? Change it in one tap.</p></div>" +

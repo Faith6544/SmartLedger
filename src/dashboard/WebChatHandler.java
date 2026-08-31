@@ -82,7 +82,7 @@ public class WebChatHandler implements HttpHandler {
 
         h.append("function showToast(msg){var t=document.createElement('div');t.className='toast success';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('show');},50);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},500);},4000);}\n\n");
 
-        // d.counterparty is raw text the trader typed (e.g. "Oga Musa") — it goes into innerHTML below,
+        // d.counterparty is raw text the trader typed (e.g. "Oga Musa") - it goes into innerHTML below,
         // so it has to be escaped first or typed HTML would run as script in their own browser.
         h.append("function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}\n\n");
 
@@ -97,7 +97,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("  .then(function(d){\n");
         h.append("    hideTyping();\n");
         h.append("    if(d.isCommand){addMsg(d.response.replace(/\\n/g,'<br>'),'system');return;}\n");
-        h.append("    if(!d.isTransaction){addMsg('Got it. (Not recorded as a transaction)','system');return;}\n");
+        h.append("    if(!d.isTransaction){var casualReplies=['Got it.','Noted!','Alright.','Okay, noted.','Gotcha.'];addMsg(casualReplies[Math.floor(Math.random()*casualReplies.length)],'system');return;}\n");
         h.append("    showConfirm(d);\n");
         h.append("  })\n");
         h.append("  .catch(function(e){hideTyping();addMsg('Error: '+e,'system');});\n");
@@ -115,7 +115,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("  html+='Category: <b>'+d.type+'</b> | Amount: <b>\\u20A6'+d.amountFormatted+'</b>';\n");
         h.append("  if(d.counterparty)html+=' | Who: <b>'+escapeHtml(d.counterparty)+'</b>';\n");
         h.append("  html+='<br><br>Change category: <select id=\"sel-'+id+'\">';\n");
-        h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
+        h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT','DELIVERY'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
         h.append("  html+='</select><br><div class=\"actions\">';\n");
         h.append("  html+='<button class=\"confirm-btn\" data-id=\"'+id+'\">Confirm</button>';\n");
         h.append("  html+='<button class=\"cancel-btn\" data-id=\"'+id+'\">Cancel</button>';\n");

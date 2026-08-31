@@ -224,6 +224,7 @@ public class HtmlTemplates {
         ".card.supplies{border-left:4px solid #FF9800;background:linear-gradient(135deg,#fff 50%,#fff3e0);} .card.supplies:hover{box-shadow:0 8px 30px rgba(255,152,0,0.25);} .card.supplies .value{color:#e65100;}" +
         ".card.debts{border-left:4px solid #e91e63;background:linear-gradient(135deg,#fff 50%,#fce4ec);} .card.debts:hover{box-shadow:0 8px 30px rgba(233,30,99,0.25);} .card.debts .value{color:#ad1457;}" +
         ".card.payments{border-left:4px solid #2196F3;background:linear-gradient(135deg,#fff 50%,#e3f2fd);} .card.payments:hover{box-shadow:0 8px 30px rgba(33,150,243,0.25);} .card.payments .value{color:#1565c0;}" +
+        ".card.deliveries{border-left:4px solid #009688;background:linear-gradient(135deg,#fff 50%,#e0f2f1);} .card.deliveries:hover{box-shadow:0 8px 30px rgba(0,150,136,0.25);} .card.deliveries .value{color:#00695c;}" +
         ".card.profit{border-left:4px solid #4CAF50;background:linear-gradient(135deg,#fff 50%,#e8f5e9);} .card.profit:hover{box-shadow:0 8px 30px rgba(76,175,80,0.3);} .card.profit .value{color:#2e7d32;}" +
         ".card.profit.negative{border-left-color:#f44336;background:linear-gradient(135deg,#fff 50%,#ffebee);} .card.profit.negative:hover{box-shadow:0 8px 30px rgba(244,67,54,0.25);} .card.profit.negative .value{color:#c62828;}" +
         ".card h3{font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}" +
@@ -239,9 +240,9 @@ public class HtmlTemplates {
         "th{background:#f5f5f5;color:#888;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;border-bottom:1px solid #eee;}" +
         "td{padding:8px 10px;border-bottom:1px solid #f5f5f5;font-size:12px;color:#555;}" +
         "tr{transition:all 0.3s;} tr:hover{background:#f0fff0;}" +
-        ".row-type-SALE:hover{background:#e8f5e9;} .row-type-EXPENSE:hover{background:#ffebee;} .row-type-SUPPLY:hover{background:#fff3e0;} .row-type-DEBT:hover{background:#fce4ec;} .row-type-PAYMENT:hover{background:#e3f2fd;}" +
+        ".row-type-SALE:hover{background:#e8f5e9;} .row-type-EXPENSE:hover{background:#ffebee;} .row-type-SUPPLY:hover{background:#fff3e0;} .row-type-DEBT:hover{background:#fce4ec;} .row-type-PAYMENT:hover{background:#e3f2fd;} .row-type-DELIVERY:hover{background:#e0f2f1;}" +
         ".badge{padding:3px 10px;border-radius:10px;font-size:9px;font-weight:600;text-transform:uppercase;}" +
-        ".badge-SALE{background:#e8f5e9;color:#2e7d32;} .badge-EXPENSE{background:#ffebee;color:#c62828;} .badge-SUPPLY{background:#fff3e0;color:#e65100;} .badge-DEBT{background:#fce4ec;color:#ad1457;} .badge-PAYMENT{background:#e3f2fd;color:#1565c0;}" +
+        ".badge-SALE{background:#e8f5e9;color:#2e7d32;} .badge-EXPENSE{background:#ffebee;color:#c62828;} .badge-SUPPLY{background:#fff3e0;color:#e65100;} .badge-DEBT{background:#fce4ec;color:#ad1457;} .badge-PAYMENT{background:#e3f2fd;color:#1565c0;} .badge-DELIVERY{background:#e0f2f1;color:#00695c;}" +
         ".empty{color:#bbb;font-style:italic;padding:15px 0;font-size:13px;text-align:center;}" +
         ".empty-state{text-align:center;padding:30px 10px;}" +
 
@@ -264,7 +265,7 @@ public class HtmlTemplates {
         ".cat-tab{padding:7px 14px;border-radius:20px;font-size:11px;font-weight:600;text-decoration:none;color:#888;background:#f5f5f5;white-space:nowrap;transition:all 0.3s;border:1px solid transparent;}" +
         ".cat-tab:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.1);color:#333;}" +
         ".cat-tab.active{color:#fff;}" +
-        ".cat-tab.active.t-ALL{background:#333;} .cat-tab.active.t-SALE{background:#4CAF50;} .cat-tab.active.t-EXPENSE{background:#f44336;} .cat-tab.active.t-SUPPLY{background:#FF9800;} .cat-tab.active.t-DEBT{background:#e91e63;} .cat-tab.active.t-PAYMENT{background:#2196F3;}" +
+        ".cat-tab.active.t-ALL{background:#333;} .cat-tab.active.t-SALE{background:#4CAF50;} .cat-tab.active.t-EXPENSE{background:#f44336;} .cat-tab.active.t-SUPPLY{background:#FF9800;} .cat-tab.active.t-DEBT{background:#e91e63;} .cat-tab.active.t-PAYMENT{background:#2196F3;} .cat-tab.active.t-DELIVERY{background:#009688;}" +
         ".btn{padding:6px 14px;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-weight:600;transition:all 0.3s;}" +
         ".btn:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,0.15);}" +
         ".btn:active{transform:scale(0.95);box-shadow:none;}" +

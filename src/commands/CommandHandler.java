@@ -62,9 +62,10 @@ public class CommandHandler {
             double supplies = transactionDAO.getTotalByType(userId, TransactionType.SUPPLY);
             double debts = transactionDAO.getTotalByType(userId, TransactionType.DEBT);
             double payments = transactionDAO.getTotalByType(userId, TransactionType.PAYMENT);
+            double deliveries = transactionDAO.getTotalByType(userId, TransactionType.DELIVERY);
             double profit = sales - expenses - supplies;
-            return String.format("Business Summary:\n\nSales:       ₦%,.2f\nExpenses:    ₦%,.2f\nSupplies:    ₦%,.2f\nDebts Owed:  ₦%,.2f\nPayments In: ₦%,.2f\n----------------\nProfit:      ₦%,.2f",
-                sales, expenses, supplies, debts, payments, profit);
+            return String.format("Business Summary:\n\nSales:       ₦%,.2f\nExpenses:    ₦%,.2f\nSupplies:    ₦%,.2f\nDebts Owed:  ₦%,.2f\nPayments In: ₦%,.2f\nDeliveries:  ₦%,.2f\n----------------\nProfit:      ₦%,.2f",
+                sales, expenses, supplies, debts, payments, deliveries, profit);
         }
 
         if (lower.contains("help")) {
@@ -74,7 +75,8 @@ public class CommandHandler {
                 "  \"Bought 2 cartons of Milo ₦35,000\"\n" +
                 "  \"Oga Musa owes me ₦12,000\"\n" +
                 "  \"Paid ₦5,000 for transport\"\n" +
-                "  \"Received ₦6,000 from Mama Tope\"\n\n" +
+                "  \"Received ₦6,000 from Mama Tope\"\n" +
+                "  \"Delivered rice worth ₦20,000 to Musa\"\n\n" +
                 "Or force a category with tags:\n" +
                 "  \"[sale] Rice to Mama Tope ₦20,000\"\n" +
                 "  \"[debt] Oga Musa 5 bags ₦45,000\"\n\n" +
