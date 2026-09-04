@@ -27,154 +27,189 @@ public class LandingHandler implements HttpHandler {
     }
 
     private String buildLanding() {
-        return "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
+        return "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>" +
         "<meta name='viewport' content='width=device-width,initial-scale=1.0'>" +
-        "<meta property='og:title' content='SmartLedger'>" +
-        "<meta property='og:description' content='Record-keeping made simple. Type what you sold, we handle the rest.'>" +
+        "<meta property='og:title' content='SmartLedger — Financial Bookkeeping for Modern Traders'>" +
+        "<meta property='og:description' content='Record-keeping made effortless. Chat your transactions in plain language and view them on a live financial dashboard.'>" +
         "<meta property='og:image' content='https://raw.githubusercontent.com/Faith6544/SmartLedger/main/logo.png'>" +
         "<meta property='og:url' content='https://smartledger-m28i.onrender.com'>" +
         "<meta property='og:type' content='website'>" +
-        "<title>SmartLedger - Record-keeping made simple</title>" +
+        "<title>SmartLedger - Financial Bookkeeping for Modern Traders</title>" +
         "<link rel='icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
         "<link rel='shortcut icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>" +
+        "<link rel='preconnect' href='https://fonts.googleapis.com'>" +
+        "<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>" +
+        "<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap' rel='stylesheet'>" +
+        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css'>" +
         "<style>" +
-        "*{margin:0;padding:0;box-sizing:border-box;}" +
-        "body{font-family:'Segoe UI',sans-serif;color:#333;}" +
-
+        ":root{" +
+        "--bg-canvas:#ffffff;" +
+        "--bg-subtle:#f4f4f5;" +
+        "--border-rule:#111827;" +
+        "--border-light:#e5e7eb;" +
+        "--text-primary:#111827;" +
+        "--text-secondary:#4b5563;" +
+        "--text-muted:#6b7280;" +
+        "--brand-primary:#2e7d32;" +
+        "--brand-dark:#1b5e20;" +
+        "--brand-light:#e8f5e9;" +
+        "}" +
+        "*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;}" +
+        "body{background:var(--bg-canvas);color:var(--text-primary);-webkit-font-smoothing:antialiased;line-height:1.45;}" +
+        
         // Navbar
-        ".navbar{background:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;position:sticky;top:0;z-index:100;}" +
-        ".navbar h1{color:#2e7d32;font-size:22px;}" +
-        ".navbar a{text-decoration:none;padding:10px 24px;border-radius:8px;font-weight:600;font-size:14px;}" +
-        ".nav-login{color:#2e7d32;border:2px solid #2e7d32;margin-right:10px;}" +
-        ".nav-login:hover{background:#e8f5e9;}" +
-        ".nav-signup{background:#4CAF50;color:#fff;}" +
-        ".nav-signup:hover{background:#43A047;}" +
+        ".navbar{background:#ffffff;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border-rule);position:sticky;top:0;z-index:100;}" +
+        ".nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;}" +
+        ".nav-logo{display:flex;align-items:center;justify-content:center;}" +
+        ".navbar h1{color:var(--text-primary);font-size:18px;font-weight:900;letter-spacing:0.8px;text-transform:uppercase;}" +
+        ".nav-actions{display:flex;align-items:center;gap:10px;}" +
+        ".nav-link{text-decoration:none;padding:8px 18px;border-radius:2px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.1s;border:1.5px solid var(--border-rule);}" +
+        ".nav-login{color:var(--text-primary);background:#ffffff;}" +
+        ".nav-login:hover{background:var(--bg-subtle);}" +
+        ".nav-signup{background:var(--brand-primary);color:#ffffff;border-color:var(--border-rule);}" +
+        ".nav-signup:hover{background:var(--brand-dark);}" +
 
-        // Hero
-        ".hero{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);color:#fff;padding:100px 30px;text-align:center;}" +
-        ".hero h2{font-size:48px;font-weight:800;max-width:700px;margin:0 auto 20px;line-height:1.15;}" +
-        ".hero h2 span{color:#4CAF50;}" +
-        ".hero p{font-size:18px;color:#b0bec5;max-width:550px;margin:0 auto 40px;line-height:1.6;}" +
-        ".hero-cta{display:inline-block;background:#4CAF50;color:#fff;padding:16px 40px;border-radius:10px;text-decoration:none;font-size:17px;font-weight:700;}" +
-        ".hero-cta:hover{background:#43A047;}" +
-        ".hero-sub{margin-top:15px;color:#78909c;font-size:13px;}" +
+        // Hero (Swiss Poster Structure)
+        ".hero{background:#ffffff;color:var(--text-primary);padding:80px 24px 70px;text-align:left;max-width:980px;margin:0 auto;border-bottom:2px solid var(--border-rule);}" +
+        ".hero-tag{display:inline-block;background:var(--text-primary);color:#fff;padding:4px 10px;font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;}" +
+        ".hero h2{font-size:52px;font-weight:900;max-width:880px;margin-bottom:20px;line-height:1.08;letter-spacing:-1.5px;text-transform:uppercase;}" +
+        ".hero h2 span{color:var(--brand-primary);}" +
+        ".hero p{font-size:16px;color:var(--text-secondary);max-width:640px;margin-bottom:32px;line-height:1.6;font-weight:500;}" +
+        ".hero-cta-box{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}" +
+        ".hero-cta{display:inline-flex;align-items:center;gap:8px;background:var(--brand-primary);color:#fff;padding:12px 28px;border-radius:2px;text-decoration:none;font-size:13px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border:1.5px solid var(--border-rule);transition:all 0.1s;}" +
+        ".hero-cta:hover{background:var(--brand-dark);transform:translate(-1px,-1px);}" +
+        ".hero-sec{display:inline-flex;align-items:center;gap:6px;background:#ffffff;color:var(--text-primary);border:1.5px solid var(--border-rule);padding:12px 24px;border-radius:2px;text-decoration:none;font-size:13px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;}" +
+        ".hero-sec:hover{background:var(--bg-subtle);}" +
+        ".hero-sub{margin-top:20px;color:var(--text-muted);font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;}" +
+        ".sdg{display:flex;gap:8px;margin-top:24px;flex-wrap:wrap;}" +
+        ".sdg-badge{padding:3px 8px;border-radius:2px;font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border:1px solid var(--border-rule);}" +
+        ".sdg8{background:#dcfce7;color:#166534;}" +
+        ".sdg9{background:#ffedd5;color:#9a3412;}" +
 
-        // How it works
-        ".how{padding:80px 30px;background:#fff;text-align:center;}" +
-        ".how h3{font-size:32px;margin-bottom:10px;color:#1a1a2e;}" +
-        ".how .sub{color:#888;margin-bottom:50px;font-size:16px;}" +
-        ".steps{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;max-width:900px;margin:0 auto;}" +
-        ".step{flex:1;min-width:220px;max-width:280px;text-align:center;}" +
-        ".step-num{width:50px;height:50px;background:#e8f5e9;color:#2e7d32;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin-bottom:15px;}" +
-        ".step h4{font-size:18px;margin-bottom:8px;color:#1a1a2e;}" +
-        ".step p{color:#666;font-size:14px;line-height:1.5;}" +
+        // Demo Card
+        ".demo-section{max-width:980px;margin:0 auto;padding:32px 24px;border-bottom:2px solid var(--border-rule);}" +
+        ".demo-card{background:#ffffff;border:2px solid var(--border-rule);border-radius:2px;}" +
+        ".demo-header{background:var(--bg-subtle);border-bottom:1.5px solid var(--border-rule);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;}" +
+        ".demo-title{font-size:11px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;}" +
+        ".demo-body{padding:20px;background:#ffffff;display:flex;flex-direction:column;gap:10px;}" +
+        ".msg-bubble{padding:12px 16px;border-radius:2px;font-size:13px;max-width:85%;line-height:1.4;border:1.5px solid var(--border-rule);}" +
+        ".user-bubble{background:var(--brand-primary);color:#ffffff;align-self:flex-end;}" +
+        ".sys-bubble{background:var(--bg-subtle);color:var(--text-primary);align-self:flex-start;}" +
+        ".sys-bubble strong{color:var(--brand-primary);}" +
 
-        // Features
-        ".features{padding:80px 30px;background:#f5f5f5;text-align:center;}" +
-        ".features h3{font-size:32px;margin-bottom:50px;color:#1a1a2e;}" +
-        ".feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;max-width:900px;margin:0 auto;}" +
-        ".feature-card{background:#fff;border-radius:12px;padding:30px;text-align:left;box-shadow:0 2px 12px rgba(0,0,0,0.06);}" +
-        ".feature-card .icon{font-size:30px;margin-bottom:12px;}" +
-        ".feature-card h4{font-size:17px;margin-bottom:8px;color:#1a1a2e;}" +
-        ".feature-card p{color:#666;font-size:14px;line-height:1.5;}" +
+        // How it works (Grid Section)
+        ".how{padding:60px 24px;background:#ffffff;max-width:980px;margin:0 auto;border-bottom:2px solid var(--border-rule);}" +
+        ".section-tag{font-size:11px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;border-bottom:1.5px solid var(--border-rule);padding-bottom:4px;display:inline-block;}" +
+        ".how h3{font-size:32px;font-weight:900;letter-spacing:-1px;color:var(--text-primary);margin-bottom:8px;text-transform:uppercase;}" +
+        ".how .sub{color:var(--text-secondary);margin-bottom:36px;font-size:14px;font-weight:500;}" +
+        ".steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;border:1.5px solid var(--border-rule);}" +
+        ".step-card{background:#ffffff;padding:24px;border-right:1.5px solid var(--border-rule);}" +
+        ".step-card:last-child{border-right:none;}" +
+        ".step-badge{width:32px;height:32px;background:var(--text-primary);color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;margin-bottom:14px;border-radius:0;}" +
+        ".step-card h4{font-size:14px;font-weight:900;margin-bottom:6px;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".step-card p{color:var(--text-secondary);font-size:12px;line-height:1.6;font-weight:500;}" +
 
-        // Example
-        ".example{padding:80px 30px;background:#fff;text-align:center;}" +
-        ".example h3{font-size:32px;margin-bottom:15px;color:#1a1a2e;}" +
-        ".example .sub{color:#888;margin-bottom:40px;font-size:16px;}" +
-        ".chat-demo{max-width:500px;margin:0 auto;background:#1a1a2e;border-radius:16px;padding:25px;text-align:left;}" +
-        ".chat-demo .msg{padding:10px 14px;margin:8px 0;border-radius:10px;font-size:14px;}" +
-        ".chat-demo .user-msg{background:#2e7d32;color:#fff;margin-left:40px;}" +
-        ".chat-demo .sys-msg{background:#16213e;color:#b0bec5;margin-right:40px;}" +
-        ".chat-demo .sys-msg b{color:#4CAF50;}" +
+        // Features (Swiss Matrix)
+        ".features{padding:60px 24px;background:var(--bg-subtle);border-bottom:2px solid var(--border-rule);}" +
+        ".features-inner{max-width:980px;margin:0 auto;}" +
+        ".features h3{font-size:32px;font-weight:900;letter-spacing:-1px;color:var(--text-primary);margin-bottom:32px;text-transform:uppercase;}" +
+        ".feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}" +
+        ".feature-card{background:#ffffff;padding:20px;border:1.5px solid var(--border-rule);border-radius:2px;}" +
+        ".feature-icon{width:36px;height:36px;background:var(--brand-light);color:var(--brand-primary);border:1.5px solid var(--border-rule);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;border-radius:0;}" +
+        ".feature-card h4{font-size:13px;font-weight:900;margin-bottom:4px;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".feature-card p{color:var(--text-secondary);font-size:12px;line-height:1.5;font-weight:500;}" +
 
         // CTA
-        ".cta{padding:80px 30px;background:linear-gradient(135deg,#2e7d32,#4CAF50);text-align:center;color:#fff;}" +
-        ".cta h3{font-size:32px;margin-bottom:15px;}" +
-        ".cta p{font-size:16px;opacity:0.9;margin-bottom:30px;}" +
-        ".cta a{display:inline-block;background:#fff;color:#2e7d32;padding:16px 40px;border-radius:10px;text-decoration:none;font-size:17px;font-weight:700;}" +
-        ".cta a:hover{background:#f5f5f5;}" +
+        ".cta{padding:60px 24px;background:#ffffff;text-align:left;max-width:980px;margin:0 auto;border-bottom:2px solid var(--border-rule);}" +
+        ".cta h3{font-size:36px;font-weight:900;letter-spacing:-1px;margin-bottom:8px;text-transform:uppercase;}" +
+        ".cta p{font-size:14px;color:var(--text-secondary);max-width:560px;margin-bottom:24px;line-height:1.5;font-weight:500;}" +
+        ".cta a{display:inline-flex;align-items:center;gap:8px;background:var(--brand-primary);color:#ffffff;padding:12px 28px;border-radius:2px;text-decoration:none;font-size:13px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border:1.5px solid var(--border-rule);}" +
+        ".cta a:hover{background:var(--brand-dark);}" +
 
         // Footer
-        ".footer{padding:30px;background:#1a1a2e;text-align:center;color:#666;font-size:13px;}" +
-        ".footer a{color:#4CAF50;text-decoration:none;}" +
+        ".footer{padding:28px 24px;background:#ffffff;text-align:center;color:var(--text-muted);font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;}" +
+        ".footer a{color:var(--brand-primary);text-decoration:none;font-weight:800;}" +
 
-        // SDG badges
-        ".sdg{display:flex;justify-content:center;gap:15px;margin-top:20px;}" +
-        ".sdg-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;}" +
-        ".sdg8{background:#93132a;color:#fff;}" +
-        ".sdg9{background:#f36d25;color:#fff;}" +
-
-        // Mobile
-        "@media(max-width:600px){.hero h2{font-size:30px;}.hero{padding:60px 20px;}.steps{flex-direction:column;align-items:center;}.navbar{padding:10px 15px;}.navbar a{padding:8px 14px;font-size:12px;}}" +
+        // Mobile Responsive
+        "@media(max-width:640px){.hero h2{font-size:36px;}.hero{padding:48px 16px;}.navbar{padding:12px 16px;}.step-card{border-right:none;border-bottom:1.5px solid var(--border-rule);}}" +
         "</style></head><body>" +
 
         // Navbar
-        "<div class='navbar'>" +
-        "<div style='display:flex;align-items:center;gap:8px;'><div style='width:32px;height:32px;background:#c6edc3;border:2px solid #1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;'><img src='" + HtmlTemplates.LOGO_DATA + "' style='width:20px;height:20px;'></div><h1>SmartLedger</h1></div>" +
-        "<div>" +
-        "<a href='/auth/login' class='nav-login'>Login</a>" +
-        "<a href='/auth/signup' class='nav-signup'>Sign Up</a>" +
-        "</div></div>" +
+        "<nav class='navbar'>" +
+        "<a href='/' class='nav-brand'>" +
+        "<div class='nav-logo'><img src='" + HtmlTemplates.LOGO_DATA + "' style='width:24px;height:24px;' alt='Logo'></div>" +
+        "<h1>SmartLedger</h1></a>" +
+        "<div class='nav-actions'>" +
+        "<a href='/auth/login' class='nav-link nav-login'>Login</a>" +
+        "<a href='/auth/signup' class='nav-link nav-signup'>Register</a>" +
+        "</div></nav>" +
 
         // Hero
-        "<div class='hero'>" +
-        "<h2>Type what you sold.<br><span>We handle the rest.</span></h2>" +
-        "<p>SmartLedger lets small business owners record sales, expenses, and debts by typing naturally - like sending a message. No forms. No accounting knowledge needed.</p>" +
-        "<a href='/auth/signup' class='hero-cta'>Start Recording Free</a>" +
-        "<p class='hero-sub'>No downloads. No credit card. Just type and go.</p>" +
-        "<div class='sdg'><span class='sdg-badge sdg8'>SDG 8 - Decent Work</span><span class='sdg-badge sdg9'>SDG 9 - Innovation</span></div>" +
+        "<header class='hero'>" +
+        "<div class='hero-tag'>COS 202 CLASS PROJECT &middot; SMART FINANCIAL ACCOUNTING</div>" +
+        "<h2>Type what you sold.<br><span>We balance the ledger.</span></h2>" +
+        "<p>SmartLedger empowers small business owners and merchants to record sales, expenses, and debtor balances through natural language conversations. Zero manual bookkeeping friction.</p>" +
+        "<div class='hero-cta-box'>" +
+        "<a href='/auth/signup' class='hero-cta'><i class='ti ti-arrow-right'></i> Start Recording Free</a>" +
+        "<a href='/auth/login' class='hero-sec'><i class='ti ti-login'></i> Existing Merchant</a>" +
         "</div>" +
+        "<p class='hero-sub'>Zero installation required &middot; Works in any modern browser</p>" +
+        "<div class='sdg'><span class='sdg-badge sdg8'>UN SDG 8 &middot; Decent Work</span><span class='sdg-badge sdg9'>UN SDG 9 &middot; Innovation</span></div>" +
+        "</header>" +
+
+        // Interactive Demo Preview
+        "<div class='demo-section'>" +
+        "<div class='demo-card'>" +
+        "<div class='demo-header'>" +
+        "<div class='demo-title'>Live Conversational Parsing Stream</div>" +
+        "<div><span class='sdg-badge' style='background:#dcfce7;color:#166534;'>Real-Time NLP</span></div>" +
+        "</div>" +
+        "<div class='demo-body'>" +
+        "<div class='msg-bubble user-bubble'>Sold 5 bags of rice for &#8358;100,000</div>" +
+        "<div class='msg-bubble sys-bubble'><i class='ti ti-check' style='color:#2e7d32;'></i> <strong>SALE</strong> recorded &middot; &#8358;100,000.00 (5 bags of rice)</div>" +
+        "<div class='msg-bubble user-bubble'>Oga Musa owes me &#8358;12,000</div>" +
+        "<div class='msg-bubble sys-bubble'><i class='ti ti-scale' style='color:#6a1b9a;'></i> <strong>DEBT</strong> tracked &middot; &#8358;12,000.00 (Counterparty: Oga Musa)</div>" +
+        "<div class='msg-bubble user-bubble'>Paid &#8358;5,000 for transport</div>" +
+        "<div class='msg-bubble sys-bubble'><i class='ti ti-receipt' style='color:#c62828;'></i> <strong>EXPENSE</strong> logged &middot; &#8358;5,000.00</div>" +
+        "</div></div></div>" +
 
         // How it works
-        "<div class='how'>" +
-        "<h3>How It Works</h3>" +
-        "<p class='sub'>Three steps. That's all.</p>" +
+        "<section class='how'>" +
+        "<div class='section-tag'>Architecture Workflow</div>" +
+        "<h3>How SmartLedger Operates</h3>" +
+        "<p class='sub'>Three streamlined steps to continuous financial accounting.</p>" +
         "<div class='steps'>" +
-        "<div class='step'><div class='step-num'>1</div><h4>Type What Happened</h4><p>\"Sold 5 bags of rice for &#8358;100,000\" - type it exactly how you'd say it.</p></div>" +
-        "<div class='step'><div class='step-num'>2</div><h4>We Categorize It</h4><p>SmartLedger reads your message and automatically sorts it as a sale, expense, debt, or payment.</p></div>" +
-        "<div class='step'><div class='step-num'>3</div><h4>See Your Dashboard</h4><p>Everything organized - sales, expenses, profits, and who owes you - in one clean view.</p></div>" +
-        "</div></div>" +
-
-        // Chat demo
-        "<div class='example'>" +
-        "<h3>Just Like Chatting</h3>" +
-        "<p class='sub'>No forms to fill. No fields to learn. Just type.</p>" +
-        "<div class='chat-demo'>" +
-        "<div class='msg user-msg'>Sold 5 bags of rice for &#8358;100,000</div>" +
-        "<div class='msg sys-msg'><b>SALE</b> recorded - &#8358;100,000.00</div>" +
-        "<div class='msg user-msg'>Oga Musa owes me &#8358;12,000</div>" +
-        "<div class='msg sys-msg'><b>DEBT</b> recorded - &#8358;12,000.00 (Oga Musa)</div>" +
-        "<div class='msg user-msg'>Paid &#8358;5,000 for transport</div>" +
-        "<div class='msg sys-msg'><b>EXPENSE</b> recorded - &#8358;5,000.00</div>" +
-        "<div class='msg user-msg'>What's my profit?</div>" +
-        "<div class='msg sys-msg'>Profit: <b>&#8358;95,000.00</b></div>" +
-        "</div></div>" +
+        "<div class='step-card'><div class='step-badge'>01</div><h4>Natural Input</h4><p>Type \"Sold 5 bags for &#8358;100k\" or \"Mama Tope paid &#8358;20,000\" in conversational syntax.</p></div>" +
+        "<div class='step-card'><div class='step-badge'>02</div><h4>Rule-Based NLP</h4><p>Classification engine resolves sales, expenses, supplies, debts, and payments with typo tolerance.</p></div>" +
+        "<div class='step-card'><div class='step-badge'>03</div><h4>Ledger Analytics</h4><p>Maintains live profit margin health, recording streaks, debtor netting, and printable audits.</p></div>" +
+        "</div></section>" +
 
         // Features
-        "<div class='features'>" +
-        "<h3>Built for Nigerian Traders</h3>" +
+        "<section class='features'>" +
+        "<div class='features-inner'>" +
+        "<div class='section-tag'>Core Capabilities</div>" +
+        "<h3>Built for Merchant Precision</h3>" +
         "<div class='feature-grid'>" +
-        "<div class='feature-card'><div class='icon'>&#128172;</div><h4>Chat-Style Input</h4><p>Type transactions like you're sending a message. Pidgin, English, shorthand - it understands.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128202;</div><h4>Live Dashboard</h4><p>See sales, expenses, debts, and profit at a glance. Filter by date, type, or person.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128176;</div><h4>Debt Tracking</h4><p>Know exactly who owes you and how much. Get notified when payments come in.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#9989;</div><h4>Smart Confirmation</h4><p>Every entry gets confirmed before saving. Wrong category? Change it in one tap.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128241;</div><h4>Works on Phone</h4><p>No app to download. Open in any browser on your phone and start recording.</p></div>" +
-        "<div class='feature-card'><div class='icon'>&#128274;</div><h4>Your Data, Private</h4><p>Each trader gets their own secure dashboard. Only you can see your records.</p></div>" +
-        "</div></div>" +
+        "<div class='feature-card'><div class='feature-icon'><i class='ti ti-messages'></i></div><h4>Conversational Input</h4><p>Understands regional trading terms, shorthand numbers, and currency representations.</p></div>" +
+        "<div class='feature-card'><div class='feature-icon'><i class='ti ti-chart-bar'></i></div><h4>Swiss Grid Dashboards</h4><p>High-contrast visual charts showing revenue velocity, outflows, and margin health.</p></div>" +
+        "<div class='feature-card'><div class='feature-icon'><i class='ti ti-scale'></i></div><h4>Debtor Balance Netting</h4><p>Tracks credit positions, partial payments, and debtor balances automatically.</p></div>" +
+        "<div class='feature-card'><div class='feature-icon'><i class='ti ti-shield-check'></i></div><h4>Interactive Verification</h4><p>Confirmation cards permit single-tap category overrides prior to persistence.</p></div>" +
+        "<div class='feature-card'><div class='feature-icon'><i class='ti ti-device-mobile'></i></div><h4>Universal Browser Support</h4><p>Lightweight zero-framework architecture designed for instant mobile load times.</p></div>" +
+        "<div class='feature-card'><div class='feature-icon'><i class='ti ti-lock'></i></div><h4>Isolated User DAO</h4><p>Salted SHA-256 password hashing with segregated merchant session tokens.</p></div>" +
+        "</div></div></section>" +
 
         // CTA
-        "<div class='cta'>" +
-        "<h3>Stop Losing Track of Your Money</h3>" +
-        "<p>Join traders who are ditching notebooks for something smarter.</p>" +
-        "<a href='/auth/signup'>Create Your Free Account</a>" +
-        "</div>" +
+        "<section class='cta'>" +
+        "<h3>Eliminate Accounting Discrepancies</h3>" +
+        "<p>Transition from manual paper notebooks to structured conversational bookkeeping.</p>" +
+        "<a href='/auth/signup'><i class='ti ti-user-plus'></i> Register Merchant Workspace</a>" +
+        "</section>" +
 
         // Footer
-        "<div class='footer'>" +
-        "<p>SmartLedger &#169; 2026 &#8212; COS 202 Group 22</p>" +
-        "<p style='margin-top:8px;'><a href='/auth/login'>Login</a> &middot; <a href='/auth/signup'>Sign Up</a></p>" +
-        "</div>" +
+        "<footer class='footer'>" +
+        "<p>SmartLedger System &#169; 2026 &middot; COS 202 Group 22 Class Project</p>" +
+        "<p style='margin-top:8px;'><a href='/auth/login'>Login</a> &middot; <a href='/auth/signup'>Register</a> &middot; <a href='/'>Home</a></p>" +
+        "</footer>" +
 
         "</body></html>";
     }

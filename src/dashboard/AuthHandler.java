@@ -94,33 +94,36 @@ public class AuthHandler implements HttpHandler {
     private String authPage(String title, String action, String btnText, String altLink, String altText, String error) {
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head(title));
-        h.append("<div style='min-height:100vh;display:flex;align-items:center;justify-content:center;'>");
-        h.append("<div style='background:#fff;border-radius:12px;padding:40px;width:100%;max-width:380px;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>");
-        h.append("<div style='text-align:center;margin-bottom:10px;'><div style='display:inline-flex;align-items:center;justify-content:center;width:70px;height:70px;background:#c6edc3;border:2px solid #1a1a2e;border-radius:50%;'><img src='").append(HtmlTemplates.LOGO_DATA).append("' style='width:45px;height:45px;'></div></div>");
-        h.append("<h1 style='color:#2e7d32;text-align:center;margin-bottom:5px;'>SmartLedger</h1>");
-        h.append("<p style='color:#888;text-align:center;margin-bottom:30px;font-size:14px;'>Record-keeping made simple</p>");
+        h.append("<div style='min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;'>");
+        h.append("<div style='background:#ffffff;border:2px solid var(--border-rule);border-radius:2px;padding:36px 32px;width:100%;max-width:400px;'>");
+        h.append("<div style='text-align:center;margin-bottom:24px;border-bottom:1.5px solid var(--border-rule);padding-bottom:18px;'>");
+        h.append("<div style='display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;margin-bottom:10px;'><img src='").append(HtmlTemplates.LOGO_DATA).append("' style='width:26px;height:26px;' alt='Logo'></div>");
+        h.append("<h1 style='color:var(--text-primary);font-size:18px;font-weight:900;letter-spacing:1px;text-transform:uppercase;'>SmartLedger</h1>");
+        h.append("<p style='color:var(--text-secondary);font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-top:2px;'>Merchant Accounting &middot; COS 202</p></div>");
 
         if (error != null) {
-            h.append("<div style='background:#ffebee;color:#c62828;padding:10px 15px;border-radius:6px;margin-bottom:20px;font-size:13px;'>")
-             .append(HtmlTemplates.escapeHtml(error)).append("</div>");
+            h.append("<div style='background:#fee2e2;color:var(--expense-val);border:1.5px solid var(--expense-val);border-radius:2px;padding:10px 14px;margin-bottom:20px;font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;'>")
+             .append("<i class='ti ti-alert-circle'></i> ").append(HtmlTemplates.escapeHtml(error)).append("</div>");
         }
 
         h.append("<form method='POST' action='").append(action).append("'>");
-        h.append("<label style='font-size:13px;color:#666;font-weight:500;'>Username</label>");
-        h.append("<input name='username' type='text' required style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 15px;'>");
-        h.append("<label style='font-size:13px;color:#666;font-weight:500;'>Password</label>");
-        h.append("<input name='password' type='password' required style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 15px;'>");
+        h.append("<div style='margin-bottom:16px;'><label style='font-size:11px;color:var(--text-primary);font-weight:900;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px;'>Username</label>");
+        h.append("<input name='username' type='text' required placeholder='Enter your username' style='width:100%;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+        
+        h.append("<div style='margin-bottom:16px;'><label style='font-size:11px;color:var(--text-primary);font-weight:900;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px;'>Password</label>");
+        h.append("<input name='password' type='password' required placeholder='••••••••' style='width:100%;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+        
         if (action.contains("signup")) {
-            h.append("<label style='font-size:13px;color:#666;font-weight:500;'>Business Name <span style='color:#aaa;'>(optional)</span></label>");
-            h.append("<input name='business_name' type='text' placeholder='e.g. Mama Tope Provisions' style='width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin:5px 0 15px;'>");
+            h.append("<div style='margin-bottom:16px;'><label style='font-size:11px;color:var(--text-primary);font-weight:900;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px;'>Business Name <span style='color:var(--text-muted);font-weight:600;'>(OPTIONAL)</span></label>");
+            h.append("<input name='business_name' type='text' placeholder='e.g. Mama Tope Provisions' style='width:100%;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
         }
-        h.append("<div style='height:10px;'></div>");
-        h.append("<button type='submit' style='width:100%;padding:12px;background:linear-gradient(135deg,#4CAF50,#66BB6A);color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;'>")
+        h.append("<div style='height:6px;'></div>");
+        h.append("<button type='submit' style='width:100%;padding:12px;background:var(--brand-primary);color:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;font-size:12px;font-weight:900;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.1s;'>")
          .append(btnText).append("</button>");
         h.append("</form>");
 
-        h.append("<p style='text-align:center;margin-top:20px;font-size:13px;'>");
-        h.append("<a href='").append(altLink).append("' style='color:#2196F3;text-decoration:none;'>").append(altText).append("</a></p>");
+        h.append("<div style='text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border-light);font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;'>");
+        h.append("<a href='").append(altLink).append("' style='color:var(--brand-primary);text-decoration:none;'>").append(altText).append("</a></div>");
 
         h.append("</div></div>");
         h.append(HtmlTemplates.footer());
