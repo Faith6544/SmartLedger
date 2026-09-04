@@ -115,62 +115,63 @@ public class AnalysisHandler implements HttpHandler {
         // Title
         h.append("<div class='section'><h2>Business Analysis - ").append(periodLabel).append("</h2>");
 
-        // Period selector
+        // Period buttons
         h.append("<div class='period-bar'>");
-        h.append(periodBtn(token, "week", "This Week", activePeriod));
-        h.append(periodBtn(token, "month", "This Month", activePeriod));
-        h.append(periodBtn(token, "lastmonth", "Last Month", activePeriod));
+        h.append(periodBtn(token, "week", "THIS WEEK", activePeriod));
+        h.append(periodBtn(token, "month", "THIS MONTH", activePeriod));
+        h.append(periodBtn(token, "lastmonth", "LAST MONTH", activePeriod));
         h.append("</div>");
 
         // Custom range form
-        h.append("<form class='filter-bar' style='margin-top:-10px;margin-bottom:20px;' method='GET' action='/analysis/").append(token).append("'>");
+        h.append("<form class='filter-bar' style='margin-top:-10px;margin-bottom:24px;' method='GET' action='/analysis/").append(token).append("'>");
         h.append("<input type='hidden' name='period' value='custom'>");
         h.append("<input type='date' name='from' value='").append(from).append("'>");
-        h.append("<span style='color:#888;'>to</span>");
+        h.append("<span style='color:var(--text-muted);font-weight:700;font-size:11px;text-transform:uppercase;'>TO</span>");
         h.append("<input type='date' name='to' value='").append(to).append("'>");
-        h.append("<button type='submit' class='btn btn-primary' style='padding:8px 16px;'>Analyze</button>");
+        h.append("<button type='submit' class='btn btn-primary' style='padding:8px 16px;'>ANALYZE</button>");
         h.append("</form>");
         h.append("</div>");
 
         // Period summary cards
         h.append("<div class='cards'>");
-        h.append(HtmlTemplates.card("Sales", sales, "sales"));
-        h.append(HtmlTemplates.card("Expenses", expenses, "expenses"));
-        h.append(HtmlTemplates.card("Supplies", supplies, "supplies"));
+        h.append(HtmlTemplates.card("Gross Sales", sales, "sales"));
+        h.append(HtmlTemplates.card("Total Expenses", expenses, "expenses"));
+        h.append(HtmlTemplates.card("Supplies Cost", supplies, "supplies"));
         h.append(HtmlTemplates.card("Debts Owed", debts, "debts"));
         h.append(HtmlTemplates.card("Payments In", payments, "payments"));
         String profitClass = profit >= 0 ? "profit" : "profit negative";
-        h.append("<div class='card ").append(profitClass).append("'><h3>Profit</h3>");
+        h.append("<div class='card ").append(profitClass).append(" anim-on-scroll'>");
+        h.append("<div class='card-header'><span class='card-label'>Net Margin</span></div>");
         h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
         h.append("</div>");
 
         // Daily Sales vs Expenses Chart
-        h.append("<div class='chart-container'>");
-        h.append("<h3>Daily Sales vs Expenses</h3>");
+        h.append("<div class='chart-container anim-on-scroll'>");
+        h.append("<h3>DAILY SALES VS EXPENSES FLOW</h3>");
         h.append(buildDailyChart(dailySales, dailyExpenses, from, to));
         h.append("</div>");
 
         // Category breakdown + Pie chart side by side
         h.append("<div class='chart-container anim-on-scroll'>");
-        h.append("<h3>Spending Breakdown</h3>");
-        h.append("<div style='display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:center;'>");
-        h.append("<div style='flex:1;min-width:200px;'>").append(buildCategoryBars(sales, expenses, supplies)).append("</div>");
+        h.append("<h3>OUTFLOW &amp; REVENUE ALLOCATION</h3>");
+        h.append("<div style='display:flex;gap:24px;flex-wrap:wrap;align-items:center;justify-content:center;'>");
+        h.append("<div style='flex:1;min-width:220px;'>").append(buildCategoryBars(sales, expenses, supplies)).append("</div>");
         h.append("<div style='flex-shrink:0;'>").append(HtmlTemplates.pieChart(sales, expenses, supplies)).append("</div>");
         h.append("</div></div>");
 
         // Top debtors
         if (!topDebtors.isEmpty()) {
-            h.append("<div class='section'><h2>Top Debtors This Period</h2>");
-            h.append("<table><tr><th>Name</th><th>Amount Owed</th></tr>");
+            h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-users' style='color:var(--brand-primary);'></i> TOP DEBTORS THIS PERIOD</h2>");
+            h.append("<table><tr><th>COUNTERPARTY</th><th>OUTSTANDING BALANCE</th></tr>");
             for (Map.Entry<String, Double> entry : topDebtors.entrySet()) {
                 h.append("<tr><td>").append(HtmlTemplates.escapeHtml(entry.getKey())).append("</td>");
-                h.append("<td style='font-weight:600;color:#ad1457;'>&#8358;").append(HtmlTemplates.formatAmount(entry.getValue())).append("</td></tr>");
+                h.append("<td style='font-weight:700;color:var(--debt-val);font-variant-numeric:tabular-nums;'>&#8358;").append(HtmlTemplates.formatAmount(entry.getValue())).append("</td></tr>");
             }
             h.append("</table></div>");
         }
 
         // ADVICE SECTION
-        h.append("<div class='section'><h2>Advice</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-bulb' style='color:var(--brand-primary);'></i> INTELLIGENCE &amp; RECOMMENDATIONS</h2>");
         h.append(generateAdvice(sales, expenses, supplies, debts, profit, activeDays, bestDay, topDebtors, from, to));
         h.append("</div>");
 
@@ -203,6 +204,7 @@ public class AnalysisHandler implements HttpHandler {
         StringBuilder svg = new StringBuilder();
         svg.append("<div style='overflow-x:auto;text-align:center;'>");
         svg.append("<svg width='100%' viewBox='0 0 ").append(totalWidth).append(" ").append(chartHeight + 50).append("' xmlns='http://www.w3.org/2000/svg'>");
+        svg.append("<line x1='20' y1='").append(chartHeight).append("' x2='").append(totalWidth - 20).append("' y2='").append(chartHeight).append("' stroke='#111827' stroke-width='1.5'/>");
 
         int x = 40;
         for (String date : allDates) {
@@ -214,29 +216,29 @@ public class AnalysisHandler implements HttpHandler {
             if (sH < 2 && s > 0) sH = 2;
             if (eH < 2 && e > 0) eH = 2;
 
-            // Sales bar (emerald)
+            // Sales bar (Forest green)
             svg.append("<rect x='").append(x).append("' y='").append(chartHeight - sH)
                .append("' width='").append(barWidth).append("' height='").append(sH)
-               .append("' fill='#10b981' rx='4'/>");
+               .append("' fill='var(--sales-val)' stroke='#111827' stroke-width='1.5' class='bar-el'/>");
 
-            // Expense bar (rose)
+            // Expense bar (Crimson red)
             svg.append("<rect x='").append(x + barWidth + gap).append("' y='").append(chartHeight - eH)
                .append("' width='").append(barWidth).append("' height='").append(eH)
-               .append("' fill='#f43f5e' rx='4'/>");
+               .append("' fill='var(--expense-val)' stroke='#111827' stroke-width='1.5' class='bar-el'/>");
 
             // Date label
             String shortDate = date.substring(5); // "08-05"
-            svg.append("<text x='").append(x + groupWidth / 2).append("' y='").append(chartHeight + 15)
-               .append("' text-anchor='middle' font-size='10' font-weight='600' fill='#64748b'>").append(shortDate).append("</text>");
+            svg.append("<text x='").append(x + groupWidth / 2).append("' y='").append(chartHeight + 18)
+               .append("' text-anchor='middle' font-size='10' font-weight='700' fill='#4b5563'>").append(shortDate).append("</text>");
 
             x += groupWidth + groupGap;
         }
 
         // Legend
-        svg.append("<rect x='").append(totalWidth - 150).append("' y='5' width='10' height='10' fill='#10b981' rx='2'/>");
-        svg.append("<text x='").append(totalWidth - 133).append("' y='14' font-size='11' font-weight='500' fill='#475569'>Sales</text>");
-        svg.append("<rect x='").append(totalWidth - 80).append("' y='5' width='10' height='10' fill='#f43f5e' rx='2'/>");
-        svg.append("<text x='").append(totalWidth - 63).append("' y='14' font-size='11' font-weight='500' fill='#475569'>Expenses</text>");
+        svg.append("<rect x='").append(totalWidth - 160).append("' y='5' width='12' height='12' fill='var(--sales-val)' stroke='#111827' stroke-width='1'/>");
+        svg.append("<text x='").append(totalWidth - 142).append("' y='15' font-size='11' font-weight='800' fill='#111827'>SALES</text>");
+        svg.append("<rect x='").append(totalWidth - 85).append("' y='5' width='12' height='12' fill='var(--expense-val)' stroke='#111827' stroke-width='1'/>");
+        svg.append("<text x='").append(totalWidth - 67).append("' y='15' font-size='11' font-weight='800' fill='#111827'>EXPENSES</text>");
 
         svg.append("</svg></div>");
         return svg.toString();
@@ -248,21 +250,21 @@ public class AnalysisHandler implements HttpHandler {
         if (total == 0) return "<p class='empty'>No spending data yet.</p>";
 
         StringBuilder h = new StringBuilder();
-        h.append(horizontalBar("Sales", sales, total, "#4CAF50"));
-        h.append(horizontalBar("Expenses", expenses, total, "#f44336"));
-        h.append(horizontalBar("Supplies", supplies, total, "#FF9800"));
+        h.append(horizontalBar("SALES", sales, total, "var(--sales-val)"));
+        h.append(horizontalBar("EXPENSES", expenses, total, "var(--expense-val)"));
+        h.append(horizontalBar("SUPPLIES", supplies, total, "var(--supply-val)"));
         return h.toString();
     }
 
     private String horizontalBar(String label, double value, double total, String color) {
         int percent = total > 0 ? (int)(value / total * 100) : 0;
-        return "<div style='margin-bottom:12px;'>" +
+        return "<div style='margin-bottom:14px;'>" +
             "<div style='display:flex;justify-content:space-between;margin-bottom:4px;'>" +
-            "<span style='font-size:13px;color:#666;'>" + label + "</span>" +
-            "<span style='font-size:13px;font-weight:600;'>&#8358;" + HtmlTemplates.formatAmount(value) + " (" + percent + "%)</span>" +
+            "<span style='font-size:11px;font-weight:900;letter-spacing:0.5px;color:var(--text-primary);text-transform:uppercase;'>" + label + "</span>" +
+            "<span style='font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;'>&#8358;" + HtmlTemplates.formatAmount(value) + " (" + percent + "%)</span>" +
             "</div>" +
-            "<div style='background:#f0f0f0;border-radius:6px;height:10px;overflow:hidden;'>" +
-            "<div style='background:" + color + ";height:100%;width:" + percent + "%;border-radius:6px;'></div>" +
+            "<div style='background:var(--bg-subtle);border:1px solid var(--border-rule);height:10px;overflow:hidden;'>" +
+            "<div style='background:" + color + ";height:100%;width:" + percent + "%;'></div>" +
             "</div></div>";
     }
 

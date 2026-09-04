@@ -108,22 +108,22 @@ public class DashboardHandler implements HttpHandler {
         h.append("</div>");
 
         // Charts
-        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-bar' style='color:var(--brand-primary);'></i> Performance Flow</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-bar' style='color:var(--brand-primary);'></i> PERFORMANCE FLOW</h2>");
         h.append(HtmlTemplates.barChart(sales, expenses, supplies, debts, payments));
         h.append("</div>");
-        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-pie' style='color:var(--brand-primary);'></i> Outflow Breakdown</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-pie' style='color:var(--brand-primary);'></i> REVENUE & OUTFLOW RATIO</h2>");
         h.append(HtmlTemplates.pieChart(sales, expenses, supplies));
         h.append("</div>");
 
         // Recent transactions
-        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-history' style='color:var(--brand-primary);'></i> Recent Transactions</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-history' style='color:var(--brand-primary);'></i> RECENT POSTED TRANSACTIONS</h2>");
         if (recent.isEmpty()) {
-            h.append("" + HtmlTemplates.emptyState("No transactions yet. Start recording!", "Record now", "/chat/" + token) + "");
+            h.append("" + HtmlTemplates.emptyState("No transactions recorded yet today.", "RECORD ENTRY", "/chat/" + token) + "");
         } else {
             h.append(transactionTable(recent, false, token));
         }
         h.append("<div style='margin-top:16px;'><a href='/dashboard/").append(token)
-         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-list'></i> View All Transactions</a></div>");
+         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-list'></i> VIEW FULL TRANSACTION LEDGER</a></div>");
         h.append("</div>");
 
         h.append("</div>");
@@ -136,7 +136,7 @@ public class DashboardHandler implements HttpHandler {
             String toastMsg;
             if (welcomeType.equals("new")) {
                 if (!user.getBusinessName().isEmpty()) {
-                    toastMsg = "Welcome! " + HtmlTemplates.escapeHtml(user.getBusinessName()) + " is all set up.";
+                    toastMsg = "Welcome! " + HtmlTemplates.escapeHtml(user.getBusinessName()) + " is active.";
                 } else {
                     toastMsg = "Welcome to SmartLedger, " + HtmlTemplates.escapeHtml(user.getUsername()) + "!";
                 }
@@ -145,7 +145,7 @@ public class DashboardHandler implements HttpHandler {
             }
             h.append("<script>document.addEventListener('DOMContentLoaded',function(){");
             h.append("var t=document.createElement('div');");
-            h.append("t.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#4CAF50,#66BB6A);color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:all 0.5s ease;box-shadow:0 6px 20px rgba(76,175,80,0.3);max-width:90%;text-align:center;';");
+            h.append("t.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:#ffffff;color:#111827;border:2px solid #111827;padding:12px 24px;border-radius:2px;font-size:12px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;z-index:999;opacity:0;transition:all 0.3s ease;max-width:90%;text-align:center;';");
             h.append("t.textContent='").append(toastMsg).append("';");
             h.append("document.body.appendChild(t);");
             h.append("setTimeout(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';},100);");
@@ -205,15 +205,15 @@ public class DashboardHandler implements HttpHandler {
         h.append("</form>");
 
         // Report button + View toggle
-        h.append("<div style='margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;'>");
-        h.append("<a href='/report/").append(token).append("' class='btn btn-primary' style='text-decoration:none;font-size:12px;padding:8px 16px;'>Download Report</a>");
+        h.append("<div style='margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;'>");
+        h.append("<a href='/report/").append(token).append("' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-file-analytics'></i> STATEMENT &amp; AUDIT</a>");
         h.append("<div style='display:flex;gap:4px;'>");
-        h.append("<button class='btn' id='cardViewBtn' onclick='showCards()' style='background:#4CAF50;color:#fff;'>Cards</button>");
-        h.append("<button class='btn' id='tableViewBtn' onclick='showTable()' style='background:#f5f5f5;color:#888;'>Table</button>");
+        h.append("<button class='btn' id='cardViewBtn' onclick='showCards()' style='background:var(--brand-primary);color:#fff;'>CARDS</button>");
+        h.append("<button class='btn' id='tableViewBtn' onclick='showTable()' style='background:#ffffff;color:var(--text-primary);'>TABLE</button>");
         h.append("</div></div>");
 
         if (transactions.isEmpty()) {
-            h.append(HtmlTemplates.emptyState("No transactions match your filters.", "Record now", "/chat/" + token));
+            h.append(HtmlTemplates.emptyState("No transactions match current filters.", "RECORD ENTRY", "/chat/" + token));
         } else {
             // Card view
             h.append("<div id='cardView'>");
@@ -226,7 +226,7 @@ public class DashboardHandler implements HttpHandler {
                 h.append("<div class='txn-desc'>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</div>");
                 h.append("<div class='txn-bottom'>");
                 h.append("<span class='txn-meta'>");
-                if (txn.getCounterparty() != null) h.append(HtmlTemplates.escapeHtml(txn.getCounterparty())).append(" &#183; ");
+                if (txn.getCounterparty() != null) h.append(HtmlTemplates.escapeHtml(txn.getCounterparty())).append(" &middot; ");
                 h.append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "").append("</span>");
                 h.append("<div class='txn-actions'>");
                 h.append("<select id='edit-").append(txn.getId()).append("' class='category-select' onchange='editTxn(").append(txn.getId()).append(")'>");
@@ -235,21 +235,21 @@ public class DashboardHandler implements HttpHandler {
                     h.append("<option value='").append(type.name()).append("'").append(sel).append(">").append(type.name()).append("</option>");
                 }
                 h.append("</select>");
-                h.append("<button class='btn btn-danger' onclick='deleteTxn(").append(txn.getId()).append(")'>Delete</button>");
+                h.append("<button class='btn btn-danger' onclick='deleteTxn(").append(txn.getId()).append(")'>DELETE</button>");
                 h.append("</div></div></div>");
             }
             h.append("</div>");
 
             // Table view (hidden by default)
             h.append("<div id='tableView' style='display:none;'>");
-            h.append("<table><tr><th>Type</th><th>Amount</th><th>Description</th><th>Who</th><th>Date</th></tr>");
+            h.append("<table><tr><th>TYPE</th><th>AMOUNT</th><th>DESCRIPTION</th><th>COUNTERPARTY</th><th>DATE</th></tr>");
             for (Transaction txn : transactions) {
                 h.append("<tr class='row-type-").append(txn.getType().name()).append("' id='trow-").append(txn.getId()).append("'>");
                 h.append("<td>").append(HtmlTemplates.badge(txn.getType().name())).append("</td>");
-                h.append("<td style='font-weight:600;'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</td>");
-                h.append("<td>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</td>");
+                h.append("<td style='font-weight:700;font-variant-numeric:tabular-nums;'>&#8358;").append(HtmlTemplates.formatAmount(txn.getAmount())).append("</td>");
+                h.append("<td style='font-weight:600;'>").append(HtmlTemplates.escapeHtml(txn.getDescription())).append("</td>");
                 h.append("<td>").append(txn.getCounterparty() != null ? HtmlTemplates.escapeHtml(txn.getCounterparty()) : "-").append("</td>");
-                h.append("<td style='color:#888;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "-").append("</td>");
+                h.append("<td style='color:var(--text-muted);font-weight:600;'>").append(txn.getCreatedAt() != null ? txn.getCreatedAt().toString().substring(0, 16) : "-").append("</td>");
                 h.append("</tr>");
             }
             h.append("</table></div>");
@@ -257,8 +257,8 @@ public class DashboardHandler implements HttpHandler {
         h.append("</div>");
 
         h.append("<script>");
-        h.append("function showCards(){document.getElementById('cardView').style.display='block';document.getElementById('tableView').style.display='none';document.getElementById('cardViewBtn').style.background='#4CAF50';document.getElementById('cardViewBtn').style.color='#fff';document.getElementById('tableViewBtn').style.background='#f5f5f5';document.getElementById('tableViewBtn').style.color='#888';}\n");
-        h.append("function showTable(){document.getElementById('cardView').style.display='none';document.getElementById('tableView').style.display='block';document.getElementById('tableViewBtn').style.background='#4CAF50';document.getElementById('tableViewBtn').style.color='#fff';document.getElementById('cardViewBtn').style.background='#f5f5f5';document.getElementById('cardViewBtn').style.color='#888';}\n");
+        h.append("function showCards(){document.getElementById('cardView').style.display='block';document.getElementById('tableView').style.display='none';document.getElementById('cardViewBtn').style.background='var(--brand-primary)';document.getElementById('cardViewBtn').style.color='#fff';document.getElementById('tableViewBtn').style.background='#ffffff';document.getElementById('tableViewBtn').style.color='var(--text-primary)';}\n");
+        h.append("function showTable(){document.getElementById('cardView').style.display='none';document.getElementById('tableView').style.display='block';document.getElementById('tableViewBtn').style.background='var(--brand-primary)';document.getElementById('tableViewBtn').style.color='#fff';document.getElementById('cardViewBtn').style.background='#ffffff';document.getElementById('cardViewBtn').style.color='var(--text-primary)';}\n");
         h.append("function deleteTxn(id){if(!confirm('Delete this transaction?'))return;");
         h.append("fetch('/api/delete',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},");
         h.append("body:'id='+id+'&token=").append(token).append("'}).then(r=>r.json()).then(d=>{if(d.success){var e=document.getElementById('row-'+id);if(e)e.remove();var t=document.getElementById('trow-'+id);if(t)t.remove();}});}\n");
@@ -280,10 +280,10 @@ public class DashboardHandler implements HttpHandler {
         h.append(HtmlTemplates.fullNav(token, "debts", user.getBusinessName()));
         h.append("<div class='container'>");
 
-        h.append("<div class='section'><h2>Debtor Summary</h2>");
+        h.append("<div class='section'><h2><i class='ti ti-scale' style='color:var(--brand-primary);'></i> DEBTOR &amp; CREDIT LEDGER</h2>");
 
         if (debtSummary.isEmpty()) {
-            h.append(HtmlTemplates.emptyState("No debts recorded yet.", "Record now", "/chat/" + token));
+            h.append(HtmlTemplates.emptyState("No active debtor positions recorded.", "RECORD DEBT", "/chat/" + token));
         } else {
             double totalRemaining = 0;
             for (Map.Entry<String, double[]> entry : debtSummary.entrySet()) {
@@ -292,9 +292,9 @@ public class DashboardHandler implements HttpHandler {
                 totalRemaining += vals[2];
                 int paidPercent = vals[0] > 0 ? (int)(vals[1] / vals[0] * 100) : 0;
                 String statusClass, statusText;
-                if (vals[2] <= 0) { statusClass = "status-paid"; statusText = "Fully paid"; }
-                else if (vals[1] > 0) { statusClass = "status-partial"; statusText = "Partially paid"; }
-                else { statusClass = "status-unpaid"; statusText = "Unpaid"; }
+                if (vals[2] <= 0) { statusClass = "status-paid"; statusText = "FULLY PAID"; }
+                else if (vals[1] > 0) { statusClass = "status-partial"; statusText = "PARTIALLY PAID"; }
+                else { statusClass = "status-unpaid"; statusText = "UNPAID"; }
 
                 h.append("<div class='debt-card anim-on-scroll'>");
                 h.append("<div style='display:flex;justify-content:space-between;align-items:center;'>");
@@ -303,19 +303,19 @@ public class DashboardHandler implements HttpHandler {
                 h.append("</div>");
 
                 // Progress bar - scroll triggered
-                String barColor = vals[2] <= 0 ? "#4CAF50" : vals[1] > 0 ? "#FF9800" : "#f44336";
+                String barColor = vals[2] <= 0 ? "var(--sales-val)" : vals[1] > 0 ? "var(--supply-val)" : "var(--expense-val)";
                 h.append("<div class='progress-bar'><div class='progress-animate' data-width='").append(paidPercent).append("' style='background:").append(barColor).append(";'></div></div>");
 
                 h.append("<div class='debt-amounts'>");
-                h.append("<span style='color:#ad1457;'>Owed: &#8358;").append(HtmlTemplates.formatAmount(vals[0])).append("</span>");
-                h.append("<span style='color:#2e7d32;'>Paid: &#8358;").append(HtmlTemplates.formatAmount(vals[1])).append("</span>");
-                h.append("<span style='color:#c62828;font-weight:700;'>Left: <span class='count-up' data-target='").append((long)vals[2]).append("'>&#8358;0.00</span></span>");
+                h.append("<span style='color:var(--debt-val);'>OWED: &#8358;").append(HtmlTemplates.formatAmount(vals[0])).append("</span>");
+                h.append("<span style='color:var(--sales-val);'>PAID: &#8358;").append(HtmlTemplates.formatAmount(vals[1])).append("</span>");
+                h.append("<span style='color:var(--expense-val);font-weight:800;'>OUTSTANDING: <span class='count-up' data-target='").append((long)vals[2]).append("'>&#8358;0.00</span></span>");
                 h.append("</div></div>");
             }
 
-            h.append("<div style='margin-top:16px;padding:16px;background:var(--bg-surface);border:1px solid #c7d2fe;border-radius:var(--radius-lg);text-align:center;box-shadow:var(--shadow-card);' class='anim-on-scroll'>");
-            h.append("<span style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);'>Total Outstanding Debts</span><br>");
-            h.append("<strong style='font-size:24px;font-weight:800;color:var(--debt-val);' class='count-up' data-target='").append((long)totalRemaining).append("'>&#8358;0.00</strong>");
+            h.append("<div style='margin-top:20px;padding:20px;background:var(--bg-subtle);border:1.5px solid var(--border-rule);border-radius:2px;text-align:center;' class='anim-on-scroll'>");
+            h.append("<span style='font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--text-primary);'>TOTAL OUTSTANDING DEBT BALANCE</span><br>");
+            h.append("<strong style='font-size:28px;font-weight:900;color:var(--debt-val);letter-spacing:-0.5px;font-variant-numeric:tabular-nums;' class='count-up' data-target='").append((long)totalRemaining).append("'>&#8358;0.00</strong>");
             h.append("</div>");
         }
 
