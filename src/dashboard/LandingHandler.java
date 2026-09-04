@@ -60,7 +60,7 @@ public class LandingHandler implements HttpHandler {
         // Navbar
         ".navbar{background:#ffffff;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--border-rule);position:sticky;top:0;z-index:100;}" +
         ".nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;}" +
-        ".nav-logo{width:36px;height:36px;background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;display:flex;align-items:center;justify-content:center;}" +
+        ".nav-logo{display:flex;align-items:center;justify-content:center;}" +
         ".navbar h1{color:var(--text-primary);font-size:18px;font-weight:900;letter-spacing:0.8px;text-transform:uppercase;}" +
         ".nav-actions{display:flex;align-items:center;gap:10px;}" +
         ".nav-link{text-decoration:none;padding:8px 18px;border-radius:2px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.1s;border:1.5px solid var(--border-rule);}" +
