@@ -31,18 +31,26 @@ public class WebChatHandler implements HttpHandler {
         h.append(HtmlTemplates.fullNav(token, "chat", user.getBusinessName()));
         h.append("<div class='container'><div class='chat-container'>");
         h.append("<div class='chat-messages' id='chatBox'>");
-        h.append("<div class='chat-msg system'>Welcome, ").append(HtmlTemplates.escapeHtml(user.getUsername())).append("! Type your transactions naturally.<br>");
-        h.append("<span style='color:#aaa;font-size:12px;'>Tap the <b>?</b> button for examples.</span></div></div>");
+        h.append("<div class='chat-msg system'><strong>Welcome, ").append(HtmlTemplates.escapeHtml(user.getUsername())).append("!</strong><br>");
+        h.append("<span style='color:var(--text-secondary);font-size:12px;'>Type your daily transactions in plain language or tap quick tags below.</span></div></div>");
+        h.append("<div class='quick-chips'>");
+        h.append("<span class='quick-chip' onclick=\"insertTag('[sale] ')\"><i class='ti ti-plus'></i> Sale</span>");
+        h.append("<span class='quick-chip' onclick=\"insertTag('[expense] ')\"><i class='ti ti-minus'></i> Expense</span>");
+        h.append("<span class='quick-chip' onclick=\"insertTag('[debt] ')\"><i class='ti ti-scale'></i> Debt</span>");
+        h.append("<span class='quick-chip' onclick=\"insertTag('[payment] ')\"><i class='ti ti-cash'></i> Payment</span>");
+        h.append("<span class='quick-chip' onclick=\"insertText('what is my profit')\"><i class='ti ti-chart-bar'></i> Profit</span>");
+        h.append("<span class='quick-chip' onclick=\"insertText('who owes me')\"><i class='ti ti-users'></i> Debts</span>");
+        h.append("</div>");
         h.append("<div class='chat-input-bar'>");
-        h.append("<input type='text' id='chatInput' placeholder='e.g. Sold 5 bags of rice N100,000' autocomplete='off'>");
-        h.append("<button class='btn btn-primary' id='sendBtn'>Send</button></div></div>");
+        h.append("<input type='text' id='chatInput' placeholder='e.g. Sold 5 bags of rice for N100,000' autocomplete='off'>");
+        h.append("<button class='btn btn-primary' id='sendBtn'><i class='ti ti-send'></i> Send</button></div></div>");
 
         // Help FAB + Panel
-        h.append("<button class='help-fab' id='helpBtn'>?</button>");
+        h.append("<button class='help-fab' id='helpBtn' title='Examples & Help'><i class='ti ti-help'></i></button>");
         h.append("<div class='sidebar-overlay' id='helpOverlay' style='display:none;'></div>");
         h.append("<div class='help-panel' id='helpPanel'>");
         h.append("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;'>");
-        h.append("<h3 style='color:#2e7d32;font-size:16px;'>How to use</h3>");
+        h.append("<h3 style='color:var(--text-primary);font-size:16px;font-weight:700;'>How to Record</h3>");
         h.append("<button id='helpClose' style='background:none;border:none;font-size:20px;cursor:pointer;color:#888;'>&times;</button></div>");
         h.append("<p style='font-size:12px;color:#888;margin-bottom:12px;'>Tap any example to auto-fill:</p>");
         h.append("<p style='font-size:11px;font-weight:600;color:#2e7d32;margin-bottom:6px;'>RECORD TRANSACTIONS</p>");
@@ -73,6 +81,8 @@ public class WebChatHandler implements HttpHandler {
         h.append("document.getElementById('helpOverlay').addEventListener('click',toggleHelp);\n");
         h.append("document.querySelectorAll('.help-example').forEach(function(el){el.addEventListener('click',function(){chatInput.value=this.getAttribute('data-text');chatInput.focus();toggleHelp();});});\n\n");
 
+        h.append("window.insertTag=function(tag){chatInput.value=tag;chatInput.focus();};\n");
+        h.append("window.insertText=function(txt){chatInput.value=txt;sendMessage();};\n\n");
         h.append("function toggleHelp(){document.getElementById('helpPanel').classList.toggle('open');var o=document.getElementById('helpOverlay');o.style.display=o.style.display==='block'?'none':'block';}\n\n");
 
         h.append("function addMsg(html,cls){var d=document.createElement('div');d.className='chat-msg '+cls;d.innerHTML=html;chatBox.appendChild(d);chatBox.scrollTop=chatBox.scrollHeight;return d;}\n\n");

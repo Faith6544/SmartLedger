@@ -102,33 +102,34 @@ public class DashboardHandler implements HttpHandler {
         h.append(HtmlTemplates.card("Payments In", payments, "payments"));
         h.append(HtmlTemplates.card("Deliveries", deliveries, "deliveries"));
         String profitClass = profit >= 0 ? "profit" : "profit negative";
-        h.append("<div class='card ").append(profitClass).append(" fade-in'><h3>Profit</h3>");
+        h.append("<div class='card ").append(profitClass).append(" anim-on-scroll'>");
+        h.append("<div class='card-header'><span class='card-label'>Net Margin / Profit</span></div>");
         h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
         h.append("</div>");
 
         // Charts
-        h.append("<div class='section anim-on-scroll'><h2>At a Glance</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-bar' style='color:var(--brand-primary);'></i> Performance Flow</h2>");
         h.append(HtmlTemplates.barChart(sales, expenses, supplies, debts, payments));
         h.append("</div>");
-        h.append("<div class='section alt anim-on-scroll'><h2>Spending Breakdown</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-pie' style='color:var(--brand-primary);'></i> Outflow Breakdown</h2>");
         h.append(HtmlTemplates.pieChart(sales, expenses, supplies));
         h.append("</div>");
 
         // Recent transactions
-        h.append("<div class='section anim-on-scroll'><h2>Recent Transactions</h2>");
+        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-history' style='color:var(--brand-primary);'></i> Recent Transactions</h2>");
         if (recent.isEmpty()) {
             h.append("" + HtmlTemplates.emptyState("No transactions yet. Start recording!", "Record now", "/chat/" + token) + "");
         } else {
             h.append(transactionTable(recent, false, token));
         }
-        h.append("<div style='margin-top:15px;'><a href='/dashboard/").append(token)
-         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'>View All Transactions</a></div>");
+        h.append("<div style='margin-top:16px;'><a href='/dashboard/").append(token)
+         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-list'></i> View All Transactions</a></div>");
         h.append("</div>");
 
         h.append("</div>");
 
         // FAB button
-        h.append("<a href='/chat/").append(token).append("' class='fab' title='Record a transaction'>+</a>");
+        h.append("<a href='/chat/").append(token).append("' class='fab' title='Record a transaction'><i class='ti ti-plus'></i></a>");
 
         // Welcome toast
         if (welcomeType != null) {
@@ -312,9 +313,9 @@ public class DashboardHandler implements HttpHandler {
                 h.append("</div></div>");
             }
 
-            h.append("<div style='margin-top:16px;padding:14px;background:linear-gradient(135deg,#fce4ec,#fff);border-radius:10px;text-align:center;' class='anim-on-scroll'>");
-            h.append("<span style='font-size:12px;color:#888;'>Total Outstanding</span><br>");
-            h.append("<strong style='font-size:20px;color:#ad1457;' class='count-up' data-target='").append((long)totalRemaining).append("'>&#8358;0.00</strong>");
+            h.append("<div style='margin-top:16px;padding:16px;background:var(--bg-surface);border:1px solid #c7d2fe;border-radius:var(--radius-lg);text-align:center;box-shadow:var(--shadow-card);' class='anim-on-scroll'>");
+            h.append("<span style='font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);'>Total Outstanding Debts</span><br>");
+            h.append("<strong style='font-size:24px;font-weight:800;color:var(--debt-val);' class='count-up' data-target='").append((long)totalRemaining).append("'>&#8358;0.00</strong>");
             h.append("</div>");
         }
 

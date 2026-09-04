@@ -214,29 +214,29 @@ public class AnalysisHandler implements HttpHandler {
             if (sH < 2 && s > 0) sH = 2;
             if (eH < 2 && e > 0) eH = 2;
 
-            // Sales bar (green)
+            // Sales bar (emerald)
             svg.append("<rect x='").append(x).append("' y='").append(chartHeight - sH)
                .append("' width='").append(barWidth).append("' height='").append(sH)
-               .append("' fill='#4CAF50' rx='3'/>");
+               .append("' fill='#10b981' rx='4'/>");
 
-            // Expense bar (red)
+            // Expense bar (rose)
             svg.append("<rect x='").append(x + barWidth + gap).append("' y='").append(chartHeight - eH)
                .append("' width='").append(barWidth).append("' height='").append(eH)
-               .append("' fill='#f44336' rx='3'/>");
+               .append("' fill='#f43f5e' rx='4'/>");
 
             // Date label
             String shortDate = date.substring(5); // "08-05"
             svg.append("<text x='").append(x + groupWidth / 2).append("' y='").append(chartHeight + 15)
-               .append("' text-anchor='middle' font-size='10' fill='#888'>").append(shortDate).append("</text>");
+               .append("' text-anchor='middle' font-size='10' font-weight='600' fill='#64748b'>").append(shortDate).append("</text>");
 
             x += groupWidth + groupGap;
         }
 
         // Legend
-        svg.append("<rect x='").append(totalWidth - 150).append("' y='5' width='12' height='12' fill='#4CAF50' rx='2'/>");
-        svg.append("<text x='").append(totalWidth - 133).append("' y='15' font-size='11' fill='#666'>Sales</text>");
-        svg.append("<rect x='").append(totalWidth - 80).append("' y='5' width='12' height='12' fill='#f44336' rx='2'/>");
-        svg.append("<text x='").append(totalWidth - 63).append("' y='15' font-size='11' fill='#666'>Expenses</text>");
+        svg.append("<rect x='").append(totalWidth - 150).append("' y='5' width='10' height='10' fill='#10b981' rx='2'/>");
+        svg.append("<text x='").append(totalWidth - 133).append("' y='14' font-size='11' font-weight='500' fill='#475569'>Sales</text>");
+        svg.append("<rect x='").append(totalWidth - 80).append("' y='5' width='10' height='10' fill='#f43f5e' rx='2'/>");
+        svg.append("<text x='").append(totalWidth - 63).append("' y='14' font-size='11' font-weight='500' fill='#475569'>Expenses</text>");
 
         svg.append("</svg></div>");
         return svg.toString();
