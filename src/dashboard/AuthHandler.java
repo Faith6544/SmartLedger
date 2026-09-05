@@ -25,11 +25,15 @@ public class AuthHandler implements HttpHandler {
             if ("GET".equals(method)) {
                 boolean justRegistered = query != null && query.contains("registered=1");
                 sendPage(exchange, loginPage(null, justRegistered));
+            } else if ("POST".equals(method)) {
+                processLogin(exchange);
             }
-            else if ("POST".equals(method)) { processLogin(exchange); }
         } else if (path.equals("/auth/signup")) {
-            if ("GET".equals(method)) { sendPage(exchange, signupPage(null)); }
-            else if ("POST".equals(method)) { processSignup(exchange); }
+            if ("GET".equals(method)) {
+                sendPage(exchange, signupPage(null));
+            } else if ("POST".equals(method)) {
+                processSignup(exchange);
+            }
         } else {
             exchange.getResponseHeaders().set("Location", "/auth/login");
             exchange.sendResponseHeaders(302, -1);
@@ -76,7 +80,7 @@ public class AuthHandler implements HttpHandler {
         if (justRegistered) {
             String toastScript = "<script>document.addEventListener('DOMContentLoaded',function(){" +
                 "var t=document.createElement('div');" +
-                "t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#4CAF50,#66BB6A);color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:all 0.5s ease;box-shadow:0 6px 20px rgba(76,175,80,0.3);max-width:90%;text-align:center;';" +
+                "t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;padding:14px 28px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:all 0.5s ease;box-shadow:0 6px 20px rgba(37,99,235,0.3);max-width:90%;text-align:center;';" +
                 "t.textContent='Account created successfully! Please log in.';" +
                 "document.body.appendChild(t);" +
                 "setTimeout(function(){t.style.opacity=1;t.style.transform='translateX(-50%) translateY(0)';},100);" +
@@ -93,40 +97,77 @@ public class AuthHandler implements HttpHandler {
 
     private String authPage(String title, String action, String btnText, String altLink, String altText, String error) {
         StringBuilder h = new StringBuilder();
-        h.append(HtmlTemplates.head(title));
+        h.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
+        h.append("<meta name='viewport' content='width=device-width,initial-scale=1.0'>");
+        h.append("<title>SmartLedger - " + title + "</title>");
+        h.append("<link rel='icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>");
+        h.append("<link rel='preconnect' href='https://fonts.googleapis.com'>");
+        h.append("<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>");
+        h.append("<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap' rel='stylesheet'>");
+        h.append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css'>");
+        h.append("<style>");
+        h.append("*{margin:0;padding:0;box-sizing:border-box;}");
+        h.append(":root{--bg-canvas:#e8ecf1;--border-rule:#c5cdd8;--border-light:#b0b8c4;--text-primary:#1a1a2e;--text-secondary:#2c3e50;--text-muted:#5b6f84;--brand-primary:#2563eb;--brand-dark:#1d4ed8;--brand-light:#dbeafe;--expense-val:#1d4ed8;}");
+        h.append("body{font-family:'Inter',sans-serif;background:var(--bg-canvas);color:var(--text-primary);min-height:100vh;}");
+        h.append(".auth-card{background:#ffffff;border:1px solid var(--border-rule);border-radius:8px;padding:36px 32px;width:100%;max-width:400px;}");
+        h.append(".auth-card h1{font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.3px;}");
+        h.append(".auth-card .sub{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}");
+        h.append(".auth-input{width:100%;padding:10px 14px;border:1px solid var(--border-rule);border-radius:6px;font-size:13px;font-weight:500;background:#ffffff;color:var(--text-primary);outline:none;transition:border 0.2s;}");
+        h.append(".auth-input:focus{border-color:var(--brand-primary);}");
+        h.append(".auth-label{font-size:11px;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}");
+        h.append(".auth-btn{width:100%;padding:12px;background:var(--brand-primary);color:#fff;border:1px solid var(--brand-primary);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:background 0.2s;}");
+        h.append(".auth-btn:hover{background:var(--brand-dark);}");
+        h.append(".auth-error{background:#fee2e2;color:#dc2626;border:1px solid #dc2626;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}");
+        h.append(".auth-alt{text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-rule);font-size:12px;font-weight:600;}");
+        h.append(".auth-alt a{color:var(--brand-primary);text-decoration:none;}");
+        h.append(".auth-alt a:hover{text-decoration:underline;}");
+        h.append(".logo-wrap{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#ffffff;border:1px solid var(--border-rule);border-radius:50%;margin-bottom:10px;}");
+        h.append(".logo-wrap img{width:26px;height:26px;}");
+        h.append("</style></head><body>");
+        
         h.append("<div style='min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;'>");
-        h.append("<div style='background:#ffffff;border:2px solid var(--border-rule);border-radius:2px;padding:36px 32px;width:100%;max-width:400px;'>");
-        h.append("<div style='text-align:center;margin-bottom:24px;border-bottom:1.5px solid var(--border-rule);padding-bottom:18px;'>");
-        h.append("<div style='display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;margin-bottom:10px;'><img src='").append(HtmlTemplates.LOGO_DATA).append("' style='width:26px;height:26px;' alt='Logo'></div>");
-        h.append("<h1 style='color:var(--text-primary);font-size:18px;font-weight:900;letter-spacing:1px;text-transform:uppercase;'>SmartLedger</h1>");
-        h.append("<p style='color:var(--text-secondary);font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-top:2px;'>Merchant Accounting &middot; COS 202</p></div>");
+        h.append("<div class='auth-card'>");
+        
+        // Logo & Title
+        h.append("<div style='text-align:center;margin-bottom:24px;border-bottom:1px solid var(--border-rule);padding-bottom:18px;'>");
+        h.append("<div class='logo-wrap'><img src='").append(HtmlTemplates.LOGO_DATA).append("' alt='Logo'></div>");
+        h.append("<h1>SmartLedger</h1>");
+        h.append("<p class='sub'>Merchant Accounting · COS 202</p>");
+        h.append("</div>");
 
+        // Error
         if (error != null) {
-            h.append("<div style='background:#fee2e2;color:var(--expense-val);border:1.5px solid var(--expense-val);border-radius:2px;padding:10px 14px;margin-bottom:20px;font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;'>")
-             .append("<i class='ti ti-alert-circle'></i> ").append(HtmlTemplates.escapeHtml(error)).append("</div>");
+            h.append("<div class='auth-error'><i class='ti ti-alert-circle'></i> ").append(HtmlTemplates.escapeHtml(error)).append("</div>");
         }
 
+        // Form
         h.append("<form method='POST' action='").append(action).append("'>");
-        h.append("<div style='margin-bottom:16px;'><label style='font-size:11px;color:var(--text-primary);font-weight:900;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px;'>Username</label>");
-        h.append("<input name='username' type='text' required placeholder='Enter your username' style='width:100%;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+        h.append("<div style='margin-bottom:14px;'>");
+        h.append("<label class='auth-label'>Username</label>");
+        h.append("<input class='auth-input' name='username' type='text' required placeholder='Enter your username'>");
+        h.append("</div>");
         
-        h.append("<div style='margin-bottom:16px;'><label style='font-size:11px;color:var(--text-primary);font-weight:900;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px;'>Password</label>");
-        h.append("<input name='password' type='password' required placeholder='••••••••' style='width:100%;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+        h.append("<div style='margin-bottom:14px;'>");
+        h.append("<label class='auth-label'>Password</label>");
+        h.append("<input class='auth-input' name='password' type='password' required placeholder='••••••••'>");
+        h.append("</div>");
         
         if (action.contains("signup")) {
-            h.append("<div style='margin-bottom:16px;'><label style='font-size:11px;color:var(--text-primary);font-weight:900;letter-spacing:0.5px;text-transform:uppercase;display:block;margin-bottom:6px;'>Business Name <span style='color:var(--text-muted);font-weight:600;'>(OPTIONAL)</span></label>");
-            h.append("<input name='business_name' type='text' placeholder='e.g. Mama Tope Provisions' style='width:100%;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+            h.append("<div style='margin-bottom:16px;'>");
+            h.append("<label class='auth-label'>Business Name <span style='color:var(--text-muted);font-weight:400;'>(Optional)</span></label>");
+            h.append("<input class='auth-input' name='business_name' type='text' placeholder='e.g. Mama Tope Provisions'>");
+            h.append("</div>");
         }
-        h.append("<div style='height:6px;'></div>");
-        h.append("<button type='submit' style='width:100%;padding:12px;background:var(--brand-primary);color:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;font-size:12px;font-weight:900;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.1s;'>")
-         .append(btnText).append("</button>");
+        
+        h.append("<button class='auth-btn' type='submit'>").append(btnText).append("</button>");
         h.append("</form>");
 
-        h.append("<div style='text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border-light);font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;'>");
-        h.append("<a href='").append(altLink).append("' style='color:var(--brand-primary);text-decoration:none;'>").append(altText).append("</a></div>");
+        h.append("<div class='auth-alt'>");
+        h.append("<a href='").append(altLink).append("'>").append(altText).append("</a>");
+        h.append("</div>");
 
         h.append("</div></div>");
-        h.append(HtmlTemplates.footer());
+        h.append("</body></html>");
         return h.toString();
     }
 
@@ -138,7 +179,9 @@ public class AuthHandler implements HttpHandler {
         while ((line = br.readLine()) != null) sb.append(line);
         for (String pair : sb.toString().split("&")) {
             String[] kv = pair.split("=", 2);
-            if (kv.length == 2) params.put(URLDecoder.decode(kv[0], "UTF-8"), URLDecoder.decode(kv[1], "UTF-8"));
+            if (kv.length == 2) {
+                params.put(URLDecoder.decode(kv[0], "UTF-8"), URLDecoder.decode(kv[1], "UTF-8"));
+            }
         }
         return params;
     }

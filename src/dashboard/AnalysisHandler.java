@@ -24,7 +24,6 @@ public class AnalysisHandler implements HttpHandler {
         User user = userDAO.getUserByToken(token);
         if (user == null) { exchange.getResponseHeaders().set("Location", "/auth/login"); exchange.sendResponseHeaders(302, -1); return; }
 
-        // Parse period from query
         String period = "week";
         String customFrom = null, customTo = null;
         if (query != null) {
@@ -40,7 +39,6 @@ public class AnalysisHandler implements HttpHandler {
             }
         }
 
-        // Calculate date range
         LocalDate now = LocalDate.now();
         LocalDate from, to;
         String periodLabel;
@@ -57,17 +55,14 @@ public class AnalysisHandler implements HttpHandler {
                 periodLabel = "Last Month";
                 break;
             case "custom":
-                // customFrom/customTo come from the URL query string - a malformed date here
-                // used to throw an uncaught DateTimeParseException and crash the whole page.
                 LocalDate parsedFrom = parseDateOrNull(customFrom);
                 LocalDate parsedTo = parseDateOrNull(customTo);
                 from = parsedFrom != null ? parsedFrom : now.minusDays(7);
                 to = parsedTo != null ? parsedTo : now;
-                // Cap at 3 months
                 if (from.isBefore(to.minusMonths(3))) from = to.minusMonths(3);
                 periodLabel = from.toString() + " to " + to.toString();
                 break;
-            default: // week
+            default:
                 from = now.minusDays(6);
                 to = now;
                 periodLabel = "This Week";
@@ -84,30 +79,34 @@ public class AnalysisHandler implements HttpHandler {
     private String buildAnalysis(User user, String token, String activePeriod, String from, String to, String periodLabel) {
         int uid = user.getId();
 
-        // Get period totals
         double sales = transactionDAO.getPeriodTotal(uid, TransactionType.SALE, from, to);
-double expenses = transactionDAO.getPeriodTotal(uid, TransactionType.EXPENSE, from, to);
-double supplies = transactionDAO.getPeriodTotal(uid, TransactionType.SUPPLY, from, to);
-double debts = transactionDAO.getPeriodTotal(uid, TransactionType.DEBT, from, to);
-double payments = transactionDAO.getPeriodTotal(uid, TransactionType.PAYMENT, from, to);
-double personal = transactionDAO.getPeriodTotal(uid, TransactionType.PERSONAL, from, to);
-double profit = sales - expenses - supplies;
-        // Get daily breakdowns for chart
+        double expenses = transactionDAO.getPeriodTotal(uid, TransactionType.EXPENSE, from, to);
+        double supplies = transactionDAO.getPeriodTotal(uid, TransactionType.SUPPLY, from, to);
+        double debts = transactionDAO.getPeriodTotal(uid, TransactionType.DEBT, from, to);
+        double payments = transactionDAO.getPeriodTotal(uid, TransactionType.PAYMENT, from, to);
+        double personal = transactionDAO.getPeriodTotal(uid, TransactionType.PERSONAL, from, to);
+        double profit = sales - expenses - supplies;
+
         LinkedHashMap<String, Double> dailySales = transactionDAO.getDailyTotals(uid, TransactionType.SALE, from, to);
         LinkedHashMap<String, Double> dailyExpenses = transactionDAO.getDailyTotals(uid, TransactionType.EXPENSE, from, to);
-
-        // Get top debtors
         LinkedHashMap<String, Double> topDebtors = transactionDAO.getTopDebtors(uid, from, to);
-
-        // Get best day
         String[] bestDay = transactionDAO.getBestDay(uid, from, to);
-
-        // Active days
         int activeDays = transactionDAO.getActiveDays(uid, from, to);
 
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Analysis"));
         h.append(HtmlTemplates.fullNav(token, "analysis", user.getBusinessName()));
+        
+        h.append("<style>");
+        h.append(".metric-grid{display:flex;flex-direction:column;gap:6px;margin-bottom:24px;}");
+        h.append(".metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-rule);}");
+        h.append(".metric-row:last-child{border-bottom:none;}");
+        h.append(".metric-label{font-size:13px;font-weight:600;color:var(--text-secondary);}");
+        h.append(".metric-value{font-size:16px;font-weight:700;color:var(--text-primary);font-feature-settings:'tnum';}");
+        h.append(".metric-value.positive{color:var(--sales-val);}");
+        h.append(".metric-value.negative{color:var(--expense-val);}");
+        h.append("</style>");
+
         h.append("<div class='container'>");
 
         // Title
@@ -130,20 +129,18 @@ double profit = sales - expenses - supplies;
         h.append("</form>");
         h.append("</div>");
 
-        // Period summary cards
-        h.append("<div class='cards'>");
-        h.append(HtmlTemplates.card("Gross Sales", sales, "sales"));
-        h.append(HtmlTemplates.card("Total Expenses", expenses, "expenses"));
-        h.append(HtmlTemplates.card("Supplies Cost", supplies, "supplies"));
-        h.append(HtmlTemplates.card("Debts Owed", debts, "debts"));
-        h.append(HtmlTemplates.card("Payments In", payments, "payments"));
-        String profitClass = profit >= 0 ? "profit" : "profit negative";
-        h.append("<div class='card ").append(profitClass).append(" anim-on-scroll'>");
-        h.append("<div class='card-header'><span class='card-label'>Net Margin</span></div>");
-        h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
+        // Metric Grid
+        h.append("<div class='metric-grid'>");
+        h.append("<div class='metric-row'><span class='metric-label'>Gross Sales</span><span class='metric-value'>₦").append(HtmlTemplates.formatAmount(sales)).append("</span></div>");
+        h.append("<div class='metric-row'><span class='metric-label'>Total Expenses</span><span class='metric-value'>₦").append(HtmlTemplates.formatAmount(expenses)).append("</span></div>");
+        h.append("<div class='metric-row'><span class='metric-label'>Supplies Cost</span><span class='metric-value'>₦").append(HtmlTemplates.formatAmount(supplies)).append("</span></div>");
+        h.append("<div class='metric-row'><span class='metric-label'>Debts Owed</span><span class='metric-value'>₦").append(HtmlTemplates.formatAmount(debts)).append("</span></div>");
+        h.append("<div class='metric-row'><span class='metric-label'>Payments In</span><span class='metric-value'>₦").append(HtmlTemplates.formatAmount(payments)).append("</span></div>");
+        String profitClass = profit >= 0 ? "positive" : "negative";
+        h.append("<div class='metric-row'><span class='metric-label'>Net Margin</span><span class='metric-value ").append(profitClass).append("'>₦").append(HtmlTemplates.formatAmount(profit)).append("</span></div>");
         h.append("</div>");
 
-        // Daily Sales vs Expenses Chart
+        // Daily Sales vs Expenses Chart - COMPACT
         h.append("<div class='chart-container anim-on-scroll'>");
         h.append("<h3>DAILY SALES VS EXPENSES FLOW</h3>");
         h.append(buildDailyChart(dailySales, dailyExpenses, from, to));
@@ -178,9 +175,10 @@ double profit = sales - expenses - supplies;
         return h.toString();
     }
 
-    // ===== DAILY CHART =====
+    // ================================================================
+    // ✅ COMPACT DAILY CHART - SMALLER AND CLEANER
+    // ================================================================
     private String buildDailyChart(LinkedHashMap<String, Double> dailySales, LinkedHashMap<String, Double> dailyExpenses, String from, String to) {
-        // Merge all dates
         Set<String> allDates = new TreeSet<>();
         allDates.addAll(dailySales.keySet());
         allDates.addAll(dailyExpenses.keySet());
@@ -193,18 +191,23 @@ double profit = sales - expenses - supplies;
         for (Double v : dailySales.values()) if (v > max) max = v;
         for (Double v : dailyExpenses.values()) if (v > max) max = v;
 
-        int barWidth = 20, gap = 8, groupGap = 20;
+        // COMPACT PARAMETERS - MUCH SMALLER
+        int barWidth = 10;
+        int gap = 4;
+        int groupGap = 10;
         int groupWidth = barWidth * 2 + gap;
-        int chartHeight = 160;
-        int totalWidth = allDates.size() * (groupWidth + groupGap) + 60;
-        // Dynamic width - no forced minimum, chart fits the data
+        int chartHeight = 80;
+        int totalWidth = allDates.size() * (groupWidth + groupGap) + 30;
 
         StringBuilder svg = new StringBuilder();
-        svg.append("<div style='overflow-x:auto;text-align:center;'>");
-        svg.append("<svg width='100%' viewBox='0 0 ").append(totalWidth).append(" ").append(chartHeight + 50).append("' xmlns='http://www.w3.org/2000/svg'>");
-        svg.append("<line x1='20' y1='").append(chartHeight).append("' x2='").append(totalWidth - 20).append("' y2='").append(chartHeight).append("' stroke='#111827' stroke-width='1.5'/>");
+        svg.append("<div style='overflow-x:auto;text-align:center;max-width:100%;'>");
+        svg.append("<svg width='100%' viewBox='0 0 ").append(totalWidth).append(" ").append(chartHeight + 35)
+           .append("' xmlns='http://www.w3.org/2000/svg' style='display:block;margin:0 auto;'>");
 
-        int x = 40;
+        svg.append("<line x1='15' y1='").append(chartHeight).append("' x2='").append(totalWidth - 15)
+           .append("' y2='").append(chartHeight).append("' stroke='var(--border-rule)' stroke-width='0.8'/>");
+
+        int x = 20;
         for (String date : allDates) {
             double s = dailySales.getOrDefault(date, 0.0);
             double e = dailyExpenses.getOrDefault(date, 0.0);
@@ -214,29 +217,27 @@ double profit = sales - expenses - supplies;
             if (sH < 2 && s > 0) sH = 2;
             if (eH < 2 && e > 0) eH = 2;
 
-            // Sales bar (Forest green)
             svg.append("<rect x='").append(x).append("' y='").append(chartHeight - sH)
                .append("' width='").append(barWidth).append("' height='").append(sH)
-               .append("' fill='var(--sales-val)' stroke='#111827' stroke-width='1.5' class='bar-el'/>");
+               .append("' fill='var(--sales-val)' class='bar-el' rx='1'/>");
 
-            // Expense bar (Crimson red)
             svg.append("<rect x='").append(x + barWidth + gap).append("' y='").append(chartHeight - eH)
                .append("' width='").append(barWidth).append("' height='").append(eH)
-               .append("' fill='var(--expense-val)' stroke='#111827' stroke-width='1.5' class='bar-el'/>");
+               .append("' fill='var(--expense-val)' class='bar-el' rx='1'/>");
 
-            // Date label
-            String shortDate = date.substring(5); // "08-05"
-            svg.append("<text x='").append(x + groupWidth / 2).append("' y='").append(chartHeight + 18)
-               .append("' text-anchor='middle' font-size='10' font-weight='700' fill='#4b5563'>").append(shortDate).append("</text>");
+            String shortDate = date.substring(5);
+            svg.append("<text x='").append(x + groupWidth / 2).append("' y='").append(chartHeight + 12)
+               .append("' text-anchor='middle' font-size='6' font-weight='600' fill='var(--text-muted)'>")
+               .append(shortDate).append("</text>");
 
             x += groupWidth + groupGap;
         }
 
-        // Legend
-        svg.append("<rect x='").append(totalWidth - 160).append("' y='5' width='12' height='12' fill='var(--sales-val)' stroke='#111827' stroke-width='1'/>");
-        svg.append("<text x='").append(totalWidth - 142).append("' y='15' font-size='11' font-weight='800' fill='#111827'>SALES</text>");
-        svg.append("<rect x='").append(totalWidth - 85).append("' y='5' width='12' height='12' fill='var(--expense-val)' stroke='#111827' stroke-width='1'/>");
-        svg.append("<text x='").append(totalWidth - 67).append("' y='15' font-size='11' font-weight='800' fill='#111827'>EXPENSES</text>");
+        int legendX = totalWidth - 120;
+        svg.append("<rect x='").append(legendX).append("' y='4' width='6' height='6' fill='var(--sales-val)'/>");
+        svg.append("<text x='").append(legendX + 10).append("' y='10' font-size='6' font-weight='700' fill='var(--text-primary)'>S</text>");
+        svg.append("<rect x='").append(legendX + 30).append("' y='4' width='6' height='6' fill='var(--expense-val)'/>");
+        svg.append("<text x='").append(legendX + 40).append("' y='10' font-size='6' font-weight='700' fill='var(--text-primary)'>E</text>");
 
         svg.append("</svg></div>");
         return svg.toString();
@@ -271,13 +272,11 @@ double profit = sales - expenses - supplies;
                                    int activeDays, String[] bestDay, LinkedHashMap<String, Double> topDebtors, String from, String to) {
         StringBuilder advice = new StringBuilder();
 
-        // No data
         if (sales == 0 && expenses == 0 && supplies == 0) {
             advice.append(adviceCard("No Data Yet", "Start recording your transactions to see analysis and advice here.", ""));
             return advice.toString();
         }
 
-        // Profit status
         if (profit > 0) {
             advice.append(adviceCard("Profitable Period",
                 "You made &#8358;" + HtmlTemplates.formatAmount(profit) + " in profit. Keep it up!", ""));
@@ -290,7 +289,6 @@ double profit = sales - expenses - supplies;
                 "You broke even - no profit, no loss. Look for ways to increase sales or reduce costs.", "warning"));
         }
 
-        // Expense ratio
         if (sales > 0) {
             double expenseRatio = (expenses / sales) * 100;
             if (expenseRatio > 70) {
@@ -307,7 +305,6 @@ double profit = sales - expenses - supplies;
             }
         }
 
-        // Supply vs sales
         if (supplies > sales && supplies > 0) {
             advice.append(adviceCard("Supply Costs Exceed Sales",
                 "You spent &#8358;" + HtmlTemplates.formatAmount(supplies) + " on supplies but only sold &#8358;" + HtmlTemplates.formatAmount(sales) +
@@ -315,13 +312,11 @@ double profit = sales - expenses - supplies;
                 "danger"));
         }
 
-        // Outstanding debts
         if (debts > 0) {
             advice.append(adviceCard("Outstanding Debts",
                 "You have &#8358;" + HtmlTemplates.formatAmount(debts) + " in unpaid debts this period. Follow up with your debtors to improve your cash flow.",
                 "warning"));
 
-            // Top debtor
             if (!topDebtors.isEmpty()) {
                 Map.Entry<String, Double> top = topDebtors.entrySet().iterator().next();
                 advice.append(adviceCard("Biggest Debtor: " + HtmlTemplates.escapeHtml(top.getKey()),
@@ -330,14 +325,12 @@ double profit = sales - expenses - supplies;
             }
         }
 
-        // Best day
         if (bestDay != null) {
             advice.append(adviceCard("Best Sales Day",
                 "Your best day was " + bestDay[0] + " with &#8358;" + HtmlTemplates.formatAmount(Double.parseDouble(bestDay[1])) +
                 " in sales. What did you do differently? Try to replicate it.", ""));
         }
 
-        // Daily average
         if (activeDays > 0 && sales > 0) {
             double dailyAvg = profit / activeDays;
             advice.append(adviceCard("Daily Average",
@@ -345,7 +338,6 @@ double profit = sales - expenses - supplies;
                 "You recorded transactions on " + activeDays + " days this period.", ""));
         }
 
-        // Recording consistency
         if (activeDays < 3) {
             advice.append(adviceCard("Record More Often",
                 "You only recorded on " + activeDays + " day(s). The more consistently you record, the more accurate your analysis becomes.",
@@ -378,5 +370,4 @@ double profit = sales - expenses - supplies;
         os.write(bytes);
         os.close();
     }
-    
 }

@@ -27,42 +27,64 @@ public class WebChatHandler implements HttpHandler {
         StringBuilder h = new StringBuilder();
         h.append(HtmlTemplates.head("Chat"));
         h.append(HtmlTemplates.fullNav(token, "chat", user.getBusinessName()));
-        h.append("<div class='container'><div class='chat-container'>");
-        h.append("<div class='chat-messages' id='chatBox'>");
-        h.append("<div class='chat-msg system'><strong>WELCOME, ").append(HtmlTemplates.escapeHtml(user.getUsername()).toUpperCase()).append("</strong><br>");
-        h.append("<span style='color:var(--text-secondary);font-size:12px;'>Enter transactions in natural language or tap quick tags below.</span></div></div>");
-        h.append("<div class='quick-chips'>");
-        h.append("<span class='quick-chip' onclick=\"insertTag('[sale] ')\"><i class='ti ti-plus'></i> SALE</span>");
-        h.append("<span class='quick-chip' onclick=\"insertTag('[expense] ')\"><i class='ti ti-minus'></i> EXPENSE</span>");
-        h.append("<span class='quick-chip' onclick=\"insertTag('[debt] ')\"><i class='ti ti-scale'></i> DEBT</span>");
-        h.append("<span class='quick-chip' onclick=\"insertTag('[payment] ')\"><i class='ti ti-cash'></i> PAYMENT</span>");
-        h.append("<span class='quick-chip' onclick=\"insertText('what is my profit')\"><i class='ti ti-chart-bar'></i> PROFIT</span>");
-        h.append("<span class='quick-chip' onclick=\"insertText('who owes me')\"><i class='ti ti-users'></i> DEBTORS</span>");
-        h.append("</div>");
-        h.append("<div class='chat-input-bar'>");
-        h.append("<input type='text' id='chatInput' placeholder='e.g. Sold 5 bags of rice for N100,000' autocomplete='off'>");
-        h.append("<button class='btn btn-primary' id='sendBtn'><i class='ti ti-send'></i> SEND</button></div></div>");
-
-        // Help FAB + Panel
-        h.append("<button class='help-fab' id='helpBtn' title='Examples & Help'><i class='ti ti-help'></i></button>");
-        h.append("<div class='sidebar-overlay' id='helpOverlay' style='display:none;'></div>");
-        h.append("<div class='help-panel' id='helpPanel'>");
-        h.append("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1.5px solid var(--border-rule);padding-bottom:8px;'>");
-        h.append("<h3 style='color:var(--text-primary);font-size:14px;font-weight:900;letter-spacing:0.8px;text-transform:uppercase;'>HOW TO RECORD</h3>");
-        h.append("<button id='helpClose' style='background:none;border:1.5px solid var(--border-rule);font-size:14px;cursor:pointer;color:var(--text-primary);width:26px;height:26px;display:flex;align-items:center;justify-content:center;'>&times;</button></div>");
-        h.append("<p style='font-size:11px;color:var(--text-muted);margin-bottom:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;'>Tap example to load into input:</p>");
-        h.append("<p style='font-size:11px;font-weight:900;color:var(--brand-primary);margin-bottom:6px;letter-spacing:0.8px;text-transform:uppercase;'>RECORD TRANSACTIONS</p>");
-        String[] examples = {"I Sold 5 bags of rice for N100,000", "Bought 2 cartons of Milo N35,000", "Oga Musa owes me N12,000", "Paid N5,000 for transport", "Received N6,000 from Mama Tope"};
-        for (String ex : examples) h.append("<div class='help-example' data-text='").append(ex).append("'>").append(ex).append("</div>");
-        h.append("<p style='font-size:11px;font-weight:900;color:var(--brand-primary);margin:14px 0 6px;letter-spacing:0.8px;text-transform:uppercase;'>EXPLICIT CATEGORY OVERRIDE</p>");
-        h.append("<div class='help-example' data-text='[sale] Rice to customer N20,000'>[sale] Rice to customer N20,000</div>");
-        h.append("<div class='help-example' data-text='[debt] Oga Bello 3 bags N45,000'>[debt] Oga Bello 3 bags N45,000</div>");
-        h.append("<p style='font-size:11px;font-weight:900;color:var(--brand-primary);margin:14px 0 6px;letter-spacing:0.8px;text-transform:uppercase;'>AUDIT COMMANDS</p>");
-        String[] cmds = {"show my dashboard", "what is my profit", "who owes me", "summary", "undo"};
-        for (String cmd : cmds) h.append("<div class='help-example' data-text='").append(cmd).append("'>").append(cmd).append("</div>");
+        
+        h.append("<div class='container' style='max-width:800px;margin:0 auto;padding:16px 20px;'>");
+        h.append("<div style='background:var(--bg-surface);border:1px solid var(--border-rule);border-radius:8px;padding:16px;'>");
+        h.append("<div class='chat-messages' id='chatBox' style='min-height:340px;max-height:420px;overflow-y:auto;padding:8px 4px;'>");
+        h.append("<div class='chat-msg system' style='font-family:Times New Roman, serif;'>");
+        h.append("<strong>WELCOME, ").append(HtmlTemplates.escapeHtml(user.getUsername()).toUpperCase()).append("</strong><br>");
+        h.append("<span style='color:var(--text-secondary);font-size:13px;'>Enter transactions in natural language or tap quick tags below.</span>");
         h.append("</div></div>");
 
-        // JS - using clean event listeners, no inline onclick, no quote escaping issues
+        // Quick chips - cleaner layout
+        h.append("<div style='display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;'>");
+        String[][] chips = {
+            {"[sale] ", "SALE", "#16a34a"},
+            {"[expense] ", "EXPENSE", "#dc2626"},
+            {"[debt] ", "DEBT", "#9333ea"},
+            {"[payment] ", "PAYMENT", "#2563eb"},
+            {"what is my profit", "PROFIT", "#ea580c"},
+            {"who owes me", "DEBTORS", "#6A1B9A"}
+        };
+        for (String[] chip : chips) {
+            String style = "font-family:Times New Roman, serif;padding:4px 12px;border:1px solid var(--border-rule);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:var(--bg-surface);color:var(--text-primary);transition:all 0.15s;";
+            h.append("<span class='quick-chip' data-tag='").append(chip[0]).append("' style='").append(style).append("'>").append(chip[1]).append("</span>");
+        }
+        h.append("</div>");
+
+        // Input bar
+        h.append("<div style='display:flex;gap:8px;background:var(--bg-surface);padding:6px;border:1px solid var(--border-rule);border-radius:8px;'>");
+        h.append("<input type='text' id='chatInput' placeholder='e.g. Sold 5 bags of rice for N100,000' autocomplete='off' style='flex:1;padding:8px 14px;border:1px solid var(--border-rule);border-radius:6px;font-family:Times New Roman, serif;font-size:14px;color:var(--text-primary);background:var(--bg-surface);outline:none;transition:border 0.2s;'>");
+        h.append("<button class='btn btn-primary' id='sendBtn' style='font-family:Times New Roman, serif;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:600;'><i class='ti ti-send'></i> SEND</button>");
+        h.append("</div>");
+        h.append("</div></div>");
+
+        // Help FAB + Panel
+        h.append("<button class='help-fab' id='helpBtn' title='Examples & Help' style='font-family:Times New Roman, serif;'><i class='ti ti-help'></i></button>");
+        h.append("<div class='sidebar-overlay' id='helpOverlay' style='display:none;'></div>");
+        h.append("<div class='help-panel' id='helpPanel' style='font-family:Times New Roman, serif;'>");
+        h.append("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid var(--border-rule);padding-bottom:6px;'>");
+        h.append("<h3 style='font-family:Times New Roman, serif;font-size:14px;font-weight:700;'>💡 Examples</h3>");
+        h.append("<button id='helpClose' style='background:none;border:1px solid var(--border-rule);font-size:16px;cursor:pointer;border-radius:4px;padding:0 8px;'>&times;</button></div>");
+        h.append("<p style='font-size:12px;color:var(--text-muted);margin-bottom:10px;'>Tap an example to auto-fill:</p>");
+        
+        String[] examples = {
+            "Sold 5 bags of rice for N100,000",
+            "Bought 2 cartons of Milo N35,000",
+            "Oga Musa owes me N12,000",
+            "Paid N5,000 for transport",
+            "Received N6,000 from Mama Tope",
+            "[sale] Rice to customer N20,000",
+            "[debt] Oga Bello 3 bags N45,000",
+            "what is my profit",
+            "who owes me"
+        };
+        for (String ex : examples) {
+            h.append("<div class='help-example' data-text='").append(ex).append("' style='font-family:Times New Roman, serif;padding:6px 12px;margin:4px 0;background:var(--bg-subtle);border:1px solid var(--border-rule);border-radius:4px;font-size:13px;cursor:pointer;transition:all 0.15s;'>").append(ex).append("</div>");
+        }
+        h.append("</div>");
+
+        // JavaScript
         h.append("<script>\n");
         h.append("(function(){\n");
         h.append("var TOKEN='").append(token).append("';\n");
@@ -71,27 +93,19 @@ public class WebChatHandler implements HttpHandler {
         h.append("var pending={};\n");
         h.append("var pid=0;\n\n");
 
-        // Event listeners
         h.append("document.getElementById('sendBtn').addEventListener('click',sendMessage);\n");
         h.append("chatInput.addEventListener('keydown',function(e){if(e.key==='Enter')sendMessage();});\n");
         h.append("document.getElementById('helpBtn').addEventListener('click',toggleHelp);\n");
         h.append("document.getElementById('helpClose').addEventListener('click',toggleHelp);\n");
         h.append("document.getElementById('helpOverlay').addEventListener('click',toggleHelp);\n");
-        h.append("document.querySelectorAll('.help-example').forEach(function(el){el.addEventListener('click',function(){chatInput.value=this.getAttribute('data-text');chatInput.focus();toggleHelp();});});\n\n");
+        h.append("document.querySelectorAll('.help-example').forEach(function(el){el.addEventListener('click',function(){chatInput.value=this.getAttribute('data-text');chatInput.focus();toggleHelp();});});\n");
+        h.append("document.querySelectorAll('.quick-chip').forEach(function(el){el.addEventListener('click',function(){var tag=this.getAttribute('data-tag');chatInput.value=tag;chatInput.focus();});});\n\n");
 
-        h.append("window.insertTag=function(tag){chatInput.value=tag;chatInput.focus();};\n");
-        h.append("window.insertText=function(txt){chatInput.value=txt;sendMessage();};\n\n");
         h.append("function toggleHelp(){document.getElementById('helpPanel').classList.toggle('open');var o=document.getElementById('helpOverlay');o.style.display=o.style.display==='block'?'none':'block';}\n\n");
-
         h.append("function addMsg(html,cls){var d=document.createElement('div');d.className='chat-msg '+cls;d.innerHTML=html;chatBox.appendChild(d);chatBox.scrollTop=chatBox.scrollHeight;return d;}\n\n");
-
         h.append("function showTyping(){var d=document.createElement('div');d.className='typing';d.id='typ';d.innerHTML='<span></span><span></span><span></span>';chatBox.appendChild(d);chatBox.scrollTop=chatBox.scrollHeight;}\n");
         h.append("function hideTyping(){var t=document.getElementById('typ');if(t)t.remove();}\n\n");
-
         h.append("function showToast(msg){var t=document.createElement('div');t.className='toast success';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.classList.add('show');},50);setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},500);},4000);}\n\n");
-
-        // d.counterparty is raw text the trader typed (e.g. "Oga Musa") - it goes into innerHTML below,
-        // so it has to be escaped first or typed HTML would run as script in their own browser.
         h.append("function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}\n\n");
 
         h.append("function sendMessage(){\n");
@@ -111,7 +125,6 @@ public class WebChatHandler implements HttpHandler {
         h.append("  .catch(function(e){hideTyping();addMsg('Error: '+e,'system');});\n");
         h.append("}\n\n");
 
-        // Confirm card - uses pending object to avoid quote escaping issues
         h.append("function showConfirm(d){\n");
         h.append("  var id='p'+(pid++);\n");
         h.append("  pending[id]=d;\n");
@@ -123,7 +136,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("  html+='Category: <b>'+d.type+'</b> | Amount: <b>\\u20A6'+d.amountFormatted+'</b>';\n");
         h.append("  if(d.counterparty)html+=' | Who: <b>'+escapeHtml(d.counterparty)+'</b>';\n");
         h.append("  html+='<br><br>Change category: <select id=\"sel-'+id+'\">';\n");
-        h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT','DELIVERY', 'PERSONAL'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
+        h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT','DELIVERY','PERSONAL'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
         h.append("  html+='</select><br><div class=\"actions\">';\n");
         h.append("  html+='<button class=\"confirm-btn\" data-id=\"'+id+'\">Confirm</button>';\n");
         h.append("  html+='<button class=\"cancel-btn\" data-id=\"'+id+'\">Cancel</button>';\n");
@@ -152,7 +165,6 @@ public class WebChatHandler implements HttpHandler {
         h.append("}\n\n");
 
         h.append("function cancelTxn(id){document.getElementById(id).innerHTML='<span style=\"color:#888;\">Transaction cancelled.</span>';delete pending[id];}\n");
-
         h.append("})();\n");
         h.append("</script>\n");
         h.append(HtmlTemplates.footer());
