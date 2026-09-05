@@ -1,26 +1,57 @@
 package parser;
 
-import model.TransactionType;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import model.TransactionType;
 
 public class MessageParser {
 
     private static final Pattern TAG_PATTERN = Pattern.compile(
-        "^\\[(sale|expense|supply|debt|payment)\\]\\s*(.+)", Pattern.CASE_INSENSITIVE
+        "^\\[(sale|expense|supply|debt|payment|delivery)\\]\\s*(.+)", Pattern.CASE_INSENSITIVE
     );
 
-    private static final String[] SALE_KEYS = {"sold", "sell", "sale", "i sell", "i sold", "customer bought", "bought from me"};
-    private static final String[] SUPPLY_KEYS = {"bought", "buy", "purchased", "restock", "restocked", "i bought", "i buy"};
-    private static final String[] EXPENSE_KEYS = {"paid", "pay", "spent", "spend", "used", "transport", "fare", "rent", "electricity", "data", "airtime", "i paid", "i pay", "i spent"};
-    private static final String[] PAYMENT_KEYS = {"received", "collected", "payment from", "paid me", "pay me", "gave me", "settled", "cleared"};
-    private static final String[] DEBT_KEYS = {"owes me", "owe me", "on credit", "no pay", "e no pay", "never pay", "pay me later", "go pay later", "not yet paid"};
+    // Expanded keywords with more Nigerian Pidgin variations
+    private static final String[] SALE_KEYS = {
+        "sold", "sell", "sale", "i sell", "i sold", "customer bought", "bought from me", 
+        "selling", "sold to", "sell to", "i sell", "i dey sell", "dey sell"
+    };
+    
+    private static final String[] SUPPLY_KEYS = {
+        "bought", "buy", "purchased", "restock", "restocked", "i bought", "i buy",
+        "i purchase", "i purchased", "supply", "supplied"
+    };
+    
+    private static final String[] EXPENSE_KEYS = {
+        "paid", "pay", "spent", "spend", "used", "transport", "fare", "rent", 
+        "electricity", "data", "airtime", "i paid", "i pay", "i spent", "i use",
+        "i spend", "payment for", "pay for", "charges", "fee", "fees"
+    };
+    
+    private static final String[] PAYMENT_KEYS = {
+        "received", "collected", "payment from", "paid me", "pay me", "gave me", 
+        "settled", "cleared", "i receive", "i collect", "i got", "got payment",
+        "payment received", "payment collected"
+    };
+    
+    private static final String[] DEBT_KEYS = {
+        "owes me", "owe me", "on credit", "no pay", "e no pay", "never pay", 
+        "pay me later", "go pay later", "not yet paid", "debt", "debtor",
+        "i dey owe", "dey owe", "still owe", "owe"
+    };
+    
     private static final String[] OWE_KEYS = {"i owe", "i still owe", "we owe"};
     private static final String[] CREDIT_MODIFIERS = {"credit", "later", "on credit", "go pay", "no pay", "next time"};
     private static final String[] AMBIGUOUS_KEYS = {"transfer", "transferred", "sent", "moved", "put"};
-    // Kept separate from AMBIGUOUS_KEYS/"sent" above since "sent" alone is ambiguous (could be a
-    // money transfer) - these words are unambiguously about physically delivering goods
-    private static final String[] DELIVERY_KEYS = {"deliver", "delivered", "delivery", "dispatch", "dispatched", "drop off", "dropped off", "drop-off"};
+    private static final String[] DELIVERY_KEYS = {
+        "deliver", "delivered", "delivery", "dispatch", "dispatched", 
+        "drop off", "dropped off", "drop-off", "send", "sent goods"
+    };
+    private static final String[] PERSONAL_KEYS = {
+    "personal", "myself", "family", "trip to", "vacation", 
+    "holiday", "outing", "leisure", "fun", "enjoyment",
+    "zanzibar", "abuja trip", "lagos trip", "travel",
+    "personal use", "for myself", "for personal"
+};
 
     public ParseResult parse(String rawText) {
         if (rawText == null || rawText.trim().isEmpty()) return ParseResult.noMatch();
@@ -68,47 +99,37 @@ public class MessageParser {
     }
 
     private TransactionType detectPrimaryType(String lower) {
-        // DELIVERY - check first since it's unambiguous and specific
+        // DELIVERY - check first
         if (hasAnyFuzzy(lower, DELIVERY_KEYS)) return TransactionType.DELIVERY;
 
-        // "I owe" = EXPENSE
+        // === DEBT DETECTION - CHECK BEFORE "I OWE" ===
+        if (hasAny(lower, DEBT_KEYS)) return TransactionType.DEBT;
+        if (lower.contains("owes") && !lower.contains("i owe")) return TransactionType.DEBT;
+
+      // PERSONAL - personal spending, NOT business expenses
+if (hasAnyFuzzy(lower, PERSONAL_KEYS)) return TransactionType.PERSONAL;
         if (hasAny(lower, OWE_KEYS)) return TransactionType.EXPENSE;
 
-        // "owes me" = DEBT
-        if (hasAny(lower, DEBT_KEYS)) return TransactionType.DEBT;
-
-        // "owes" without "me" - still DEBT ("Musa owes 5k")
-        if (lower.contains("owes")) return TransactionType.DEBT;
-
-        // === BORROWED FIX ===
-        // "I borrowed" is ambiguous in Nigerian English - could mean "I lent" (DEBT) or "I took a loan" (EXPENSE)
-        // Mark as null here, handle as LOW confidence in parse() method
+        // === BORROWED / LENT ===
         if (lower.contains("i borrowed") || lower.contains("i borrow")) return null;
-        // "[Name] borrowed" = DEBT (they owe you)
-        if (lower.contains("borrowed") || lower.contains("borrow")) return TransactionType.DEBT;
-
-        // === LENT FIX ===
-        // "I lent [Name]" = DEBT (someone owes you)
-        if (lower.contains("i lent") || lower.contains("i lend") || lower.contains("lent")) return TransactionType.DEBT;
+        if (lower.contains("borrowed") || lower.contains("borrow")) {
+            if (!lower.contains("i borrowed") && !lower.contains("i borrow")) {
+                return TransactionType.DEBT;
+            }
+        }
+        if (lower.contains("i lent") || lower.contains("i lend") || lower.contains("lent")) {
+            return TransactionType.DEBT;
+        }
 
         // "gave" - directional check
-        if (lower.contains("i gave") || lower.contains("gave")) {
-            // "gave me" = PAYMENT (someone paid you)
+        if (lower.contains("gave")) {
             if (lower.contains("gave me")) return TransactionType.PAYMENT;
-            // "I gave" = EXPENSE (you spent)
             if (lower.contains("i gave")) return TransactionType.EXPENSE;
         }
 
-        // SALE
-        if (hasAnyFuzzy(lower, SALE_KEYS)) return TransactionType.SALE;
-
-        // PAYMENT received
         if (hasAnyFuzzy(lower, PAYMENT_KEYS)) return TransactionType.PAYMENT;
-
-        // SUPPLY
+        if (hasAnyFuzzy(lower, SALE_KEYS)) return TransactionType.SALE;
         if (hasAnyFuzzy(lower, SUPPLY_KEYS)) return TransactionType.SUPPLY;
-
-        // EXPENSE (last - most general)
         if (hasAnyFuzzy(lower, EXPENSE_KEYS)) return TransactionType.EXPENSE;
 
         return null;
@@ -122,14 +143,12 @@ public class MessageParser {
     }
 
     private boolean hasAny(String text, String... keywords) {
-        for (String k : keywords) { if (text.contains(k)) return true; }
+        for (String k : keywords) { 
+            if (text.contains(k)) return true; 
+        }
         return false;
     }
 
-    // Same as hasAny() but also catches a single-letter typo (missing, extra, or swapped letter) -
-    // "soold" still matches "sold". Only applied to keywords 4+ letters with no spaces, checked
-    // against words 4+ letters in the message, to avoid short words like "buy"/"pay" false-matching
-    // on unrelated common words ("but", "day", etc.)
     private boolean hasAnyFuzzy(String text, String... keywords) {
         if (hasAny(text, keywords)) return true;
         String[] words = text.split("\\s+");
@@ -158,46 +177,62 @@ public class MessageParser {
     }
 
     // Words that usually mean the number right before them is a QUANTITY, not a price
-    // (e.g. "5 bags of water" - the 5 is how many, not how much it cost)
     private static final String[] UNIT_WORDS = {
         "bag", "bags", "carton", "cartons", "piece", "pieces", "pcs", "pc", "kg", "kilogram", "kilograms",
         "litre", "litres", "liter", "liters", "sack", "sacks", "dozen", "basket", "baskets", "tin", "tins",
         "can", "cans", "plate", "plates", "cup", "cups", "bottle", "bottles", "pack", "packs", "pair", "pairs",
-        "roll", "rolls", "crate", "crates", "bundle", "bundles", "yard", "yards", "meter", "meters"
+        "roll", "rolls", "crate", "crates", "bundle", "bundles", "yard", "yards", "meter", "meters",
+        "box", "boxes", "sachet", "sachets", "wrapper", "wrappers"
     };
+    
     // Words that usually introduce the actual price
     private static final String[] PRICE_INTRO_WORDS = {"for", "at", "cost", "costs", "worth", "price", "priced"};
 
     public double extractAmount(String text) {
-        String cleaned = text.replace(",", "").replace("naira", "").replace("Naira", "");
-        Pattern p = Pattern.compile("([₦N]?)\\s?(\\d+(?:\\.\\d{1,2})?)\\s*(k|K)?");
+        // Remove common currency words and commas
+        String cleaned = text.replace(",", "")
+                             .replace("naira", "")
+                             .replace("Naira", "")
+                             .replace("NGN", "")
+                             .replace("ngn", "")
+                             .replace("kobo", "")
+                             .replace("Kobo", "");
+        
+        // Match patterns like: ₦5000, N5000, 5000, 5k, 5,000, 5.6 million
+        Pattern p = Pattern.compile("([₦Nn]?)\\s?(\\d+(?:\\.\\d{1,2})?)\\s*(k|K|thousand|hundred|million|billion)?");
         Matcher m = p.matcher(cleaned);
 
-        double bestMarked = 0;   // has ₦/N/naira/k - clearly a currency amount
-        double bestUnmarked = 0; // plain number, no currency marker, not next to a unit word
+        double bestMarked = 0;
+        double bestUnmarked = 0;
 
         while (m.find()) {
             String currencyMark = m.group(1);
-            String thousandsMark = m.group(3);
+            String multiplierWord = m.group(3);
             try {
                 double amount = Double.parseDouble(m.group(2));
-                if (thousandsMark != null) amount *= 1000;
+                
+                // Handle k, thousand, hundred, million, billion
+                if (multiplierWord != null) {
+                    String lowerMultiplier = multiplierWord.toLowerCase();
+                    if (lowerMultiplier.equals("k")) amount *= 1000;
+                    else if (lowerMultiplier.equals("thousand")) amount *= 1000;
+                    else if (lowerMultiplier.equals("hundred")) amount *= 100;
+                    else if (lowerMultiplier.equals("million")) amount *= 1000000;
+                    else if (lowerMultiplier.equals("billion")) amount *= 1000000000;
+                }
 
-                boolean hasCurrencyMark = (currencyMark != null && !currencyMark.isEmpty()) || thousandsMark != null;
+                boolean hasCurrencyMark = (currencyMark != null && !currencyMark.isEmpty()) || multiplierWord != null;
                 boolean precededByPriceWord = precededByAny(cleaned, m.start(), PRICE_INTRO_WORDS);
                 boolean followedByUnitWord = followedByAny(cleaned, m.end(), UNIT_WORDS);
 
                 if (hasCurrencyMark || precededByPriceWord) {
                     if (amount > bestMarked) bestMarked = amount;
                 } else if (!followedByUnitWord) {
-                    // Plain number with no marker and not immediately followed by a unit word
-                    // ("5" in "5 bags" is skipped; "15000" with nothing after it still counts)
                     if (amount > bestUnmarked) bestUnmarked = amount;
                 }
             } catch (NumberFormatException e) { }
         }
 
-        // Prefer a clearly-marked amount (₦, naira, k, or after "for"/"at"/"worth") over a guess
         return bestMarked > 0 ? bestMarked : bestUnmarked;
     }
 
@@ -220,25 +255,29 @@ public class MessageParser {
     public String extractCounterparty(String text) {
         String lower = text.toLowerCase();
 
+        // Pattern: "owes me [Name]" or "owe [Name]"
         if (lower.contains("owes") || lower.contains("owe")) {
-            int idx = lower.indexOf("owe");
+            int idx = lower.indexOf("owes");
+            if (idx < 0) idx = lower.indexOf("owe");
             if (idx > 0) {
-                String before = text.substring(0, idx).trim();
-                String[] words = before.split("\\s+");
-                int start = Math.max(0, words.length - 3);
+                String after = text.substring(idx + 4).trim();
+                if (after.toLowerCase().startsWith("me ")) {
+                    after = after.substring(3).trim();
+                }
+                String[] words = after.split("\\s+");
                 StringBuilder name = new StringBuilder();
-                for (int i = start; i < words.length; i++) {
-                    String w = words[i].toLowerCase();
-                    if (w.equals("i") || w.equals("we") || w.equals("still") || w.equals("also")) continue;
+                for (int i = 0; i < Math.min(words.length, 2); i++) {
+                    String w = words[i];
+                    if (w.matches(".*\\d.*") || w.toLowerCase().matches("(for|today|on|credit|naira|the|a|and|of|to)")) break;
                     if (name.length() > 0) name.append(" ");
-                    name.append(words[i]);
+                    name.append(w);
                 }
                 String result = name.toString().trim();
                 if (!result.isEmpty() && !isCommon(result.toLowerCase())) return result;
             }
         }
 
-        // "[Name] borrowed" - name before "borrowed"
+        // "[Name] borrowed"
         if (lower.contains("borrowed") || lower.contains("borrow")) {
             int idx = lower.indexOf("borrow");
             if (idx > 0) {
@@ -248,7 +287,7 @@ public class MessageParser {
                 StringBuilder name = new StringBuilder();
                 for (int i = start; i < words.length; i++) {
                     String w = words[i].toLowerCase();
-                    if (w.equals("i") || w.equals("we") || w.equals("my")) continue;
+                    if (w.equals("i") || w.equals("we") || w.equals("my") || w.equals("our")) continue;
                     if (name.length() > 0) name.append(" ");
                     name.append(words[i]);
                 }
@@ -257,11 +296,46 @@ public class MessageParser {
             }
         }
 
-        if (lower.contains("i owe ")) { int idx = lower.indexOf("i owe ") + 6; return extractNameAfter(text, idx); }
-        if (lower.contains(" from ")) { int idx = lower.indexOf(" from ") + 6; return extractNameAfter(text, idx); }
-        if (lower.contains(" to ") && !lower.contains("to buy") && !lower.contains("to pay") && !lower.contains("to get")) { int idx = lower.indexOf(" to ") + 4; return extractNameAfter(text, idx); }
-        if (lower.contains("lent ")) { int idx = lower.indexOf("lent ") + 5; return extractNameAfter(text, idx); }
-        if (lower.contains("sold") && lower.contains(" to ")) { int idx = lower.indexOf(" to ") + 4; return extractNameAfter(text, idx); }
+        // "from [Name]"
+        if (lower.contains(" from ")) {
+            int idx = lower.indexOf(" from ") + 6;
+            return extractNameAfter(text, idx);
+        }
+
+        // "to [Name]"
+        if (lower.contains(" to ") && !lower.contains("to buy") && !lower.contains("to pay") && !lower.contains("to get")) {
+            int idx = lower.indexOf(" to ") + 4;
+            String name = extractNameAfter(text, idx);
+            if (name != null && !name.equalsIgnoreCase("me")) return name;
+        }
+
+        // "lent [Name]"
+        if (lower.contains("lent ")) {
+            int idx = lower.indexOf("lent ") + 5;
+            return extractNameAfter(text, idx);
+        }
+
+        // "sold to [Name]"
+        if (lower.contains("sold") && lower.contains(" to ")) {
+            int idx = lower.indexOf(" to ") + 4;
+            return extractNameAfter(text, idx);
+        }
+
+        // "paid [Name]" or "pay [Name]"
+        if (lower.contains("paid ") || lower.contains("pay ")) {
+            int idx = lower.indexOf("paid ");
+            if (idx < 0) idx = lower.indexOf("pay ");
+            if (idx >= 0) {
+                String after = text.substring(idx + (lower.contains("paid ") ? 5 : 4)).trim();
+                String[] words = after.split("\\s+");
+                if (words.length > 0) {
+                    String first = words[0];
+                    if (!first.matches(".*\\d.*") && !isCommon(first.toLowerCase())) {
+                        return first;
+                    }
+                }
+            }
+        }
 
         return null;
     }
@@ -273,7 +347,8 @@ public class MessageParser {
         StringBuilder name = new StringBuilder();
         for (int i = 0; i < Math.min(words.length, 3); i++) {
             String word = words[i];
-            if (word.matches(".*\\d.*") || word.toLowerCase().matches("(for|today|on|credit|naira|the|a)")) break;
+            if (word.matches(".*\\d.*") || 
+                word.toLowerCase().matches("(for|today|on|credit|naira|the|a|an|and|of|to|with)")) break;
             if (name.length() > 0) name.append(" ");
             name.append(word);
         }
@@ -283,15 +358,21 @@ public class MessageParser {
     }
 
     private boolean isCommon(String word) {
-        String[] common = {"i", "me", "my", "the", "a", "an", "for", "and", "to", "of", "it", "is", "was", "someone", "somebody", "him", "her"};
-        for (String c : common) { if (c.equals(word)) return true; }
+        String[] common = {"i", "me", "my", "the", "a", "an", "for", "and", "to", "of", "it", "is", "was", 
+                           "someone", "somebody", "him", "her", "they", "them", "we", "our", "us", "you",
+                           "that", "this", "these", "those", "from", "with", "without", "about", "into"};
+        for (String c : common) { 
+            if (c.equals(word)) return true; 
+        }
         return false;
     }
 
     public boolean isCommand(String text) {
         String lower = text.toLowerCase().trim();
-        return lower.contains("show") || lower.contains("dashboard") || lower.contains("how much") || lower.contains("total") ||
-               lower.contains("who owes") || lower.contains("profit") || lower.contains("summary") || lower.contains("report") ||
-               lower.contains("cancel") || lower.contains("undo") || lower.contains("delete last") || lower.contains("help");
+        return lower.contains("show") || lower.contains("dashboard") || lower.contains("how much") || 
+               lower.contains("total") || lower.contains("who owes") || lower.contains("profit") || 
+               lower.contains("summary") || lower.contains("report") || lower.contains("cancel") || 
+               lower.contains("undo") || lower.contains("delete last") || lower.contains("help") ||
+               lower.matches(".*(my|the|our).*(sales|expenses|profit|balance|money).*");
     }
 }

@@ -6,5 +6,6 @@ public enum TransactionType {
     SUPPLY,
     DEBT,
     PAYMENT,
-    DELIVERY
+    DELIVERY,
+    PERSONAL  // ← Personal spending (excluded from profit)
 }

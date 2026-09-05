@@ -1,9 +1,9 @@
 package commands;
 
 import database.TransactionDAO;
+import java.util.List;
 import model.Transaction;
 import model.TransactionType;
-import java.util.List;
 
 public class CommandHandler {
 
@@ -21,7 +21,8 @@ public class CommandHandler {
             double sales = transactionDAO.getTotalByType(userId, TransactionType.SALE);
             double expenses = transactionDAO.getTotalByType(userId, TransactionType.EXPENSE);
             double supplies = transactionDAO.getTotalByType(userId, TransactionType.SUPPLY);
-            double profit = sales - expenses - supplies;
+            double personal = transactionDAO.getTotalByType(userId, TransactionType.PERSONAL);
+double profit = sales - expenses - supplies - personal;
             return String.format("Profit Summary:\nTotal Sales: ₦%,.2f\nTotal Expenses: ₦%,.2f\nTotal Supplies: ₦%,.2f\n----------------\nProfit: ₦%,.2f",
                 sales, expenses, supplies, profit);
         }

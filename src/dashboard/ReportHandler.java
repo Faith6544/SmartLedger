@@ -4,11 +4,10 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import database.TransactionDAO;
 import database.UserDAO;
-import model.*;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import model.*;
 
 public class ReportHandler implements HttpHandler {
 
@@ -27,12 +26,12 @@ public class ReportHandler implements HttpHandler {
     private String buildReport(User user, String token) {
         int uid = user.getId();
         double sales = transactionDAO.getTotalByType(uid, TransactionType.SALE);
-        double expenses = transactionDAO.getTotalByType(uid, TransactionType.EXPENSE);
-        double supplies = transactionDAO.getTotalByType(uid, TransactionType.SUPPLY);
-        double debts = transactionDAO.getTotalByType(uid, TransactionType.DEBT);
-        double payments = transactionDAO.getTotalByType(uid, TransactionType.PAYMENT);
-        double profit = sales - expenses - supplies;
-
+double expenses = transactionDAO.getTotalByType(uid, TransactionType.EXPENSE);
+double supplies = transactionDAO.getTotalByType(uid, TransactionType.SUPPLY);
+double debts = transactionDAO.getTotalByType(uid, TransactionType.DEBT);
+double payments = transactionDAO.getTotalByType(uid, TransactionType.PAYMENT);
+double personal = transactionDAO.getTotalByType(uid, TransactionType.PERSONAL);
+double profit = sales - expenses - supplies;
         List<Transaction> allTxns = transactionDAO.getAllByUser(uid);
 
         StringBuilder h = new StringBuilder();

@@ -3,10 +3,8 @@ package dashboard;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import database.UserDAO;
-import model.User;
-
 import java.io.IOException;
-import java.io.OutputStream;
+import model.User;
 
 public class WebChatHandler implements HttpHandler {
 
@@ -54,7 +52,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("<button id='helpClose' style='background:none;border:1.5px solid var(--border-rule);font-size:14px;cursor:pointer;color:var(--text-primary);width:26px;height:26px;display:flex;align-items:center;justify-content:center;'>&times;</button></div>");
         h.append("<p style='font-size:11px;color:var(--text-muted);margin-bottom:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;'>Tap example to load into input:</p>");
         h.append("<p style='font-size:11px;font-weight:900;color:var(--brand-primary);margin-bottom:6px;letter-spacing:0.8px;text-transform:uppercase;'>RECORD TRANSACTIONS</p>");
-        String[] examples = {"Sold 5 bags of rice for N100,000", "Bought 2 cartons of Milo N35,000", "Oga Musa owes me N12,000", "Paid N5,000 for transport", "Received N6,000 from Mama Tope"};
+        String[] examples = {"I Sold 5 bags of rice for N100,000", "Bought 2 cartons of Milo N35,000", "Oga Musa owes me N12,000", "Paid N5,000 for transport", "Received N6,000 from Mama Tope"};
         for (String ex : examples) h.append("<div class='help-example' data-text='").append(ex).append("'>").append(ex).append("</div>");
         h.append("<p style='font-size:11px;font-weight:900;color:var(--brand-primary);margin:14px 0 6px;letter-spacing:0.8px;text-transform:uppercase;'>EXPLICIT CATEGORY OVERRIDE</p>");
         h.append("<div class='help-example' data-text='[sale] Rice to customer N20,000'>[sale] Rice to customer N20,000</div>");
@@ -125,7 +123,7 @@ public class WebChatHandler implements HttpHandler {
         h.append("  html+='Category: <b>'+d.type+'</b> | Amount: <b>\\u20A6'+d.amountFormatted+'</b>';\n");
         h.append("  if(d.counterparty)html+=' | Who: <b>'+escapeHtml(d.counterparty)+'</b>';\n");
         h.append("  html+='<br><br>Change category: <select id=\"sel-'+id+'\">';\n");
-        h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT','DELIVERY'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
+        h.append("  ['SALE','EXPENSE','SUPPLY','DEBT','PAYMENT','DELIVERY', 'PERSONAL'].forEach(function(t){html+='<option value=\"'+t+'\"'+(t===d.type?' selected':'')+'>'+t+'</option>';});\n");
         h.append("  html+='</select><br><div class=\"actions\">';\n");
         h.append("  html+='<button class=\"confirm-btn\" data-id=\"'+id+'\">Confirm</button>';\n");
         h.append("  html+='<button class=\"cancel-btn\" data-id=\"'+id+'\">Cancel</button>';\n");

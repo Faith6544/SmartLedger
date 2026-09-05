@@ -23,11 +23,11 @@ public class HtmlTemplates {
             "<button class='hamburger' onclick='toggleSidebar()' aria-label='Open Navigation'><i class='ti ti-menu-2'></i></button>" +
             "<a href='/dashboard/" + token + "' class='logo-link'>" +
             "<div class='logo-badge'><img src='" + LOGO_DATA + "' class='logo-img' alt='SmartLedger'></div>" +
-            "<div class='logo-meta'><span class='logo-text'>SMARTLEDGER</span>" +
+            "<div class='logo-meta'><span class='logo-text'>SmartLedger</span>" +
             (bizDisplay.isEmpty() ? "" : "<span class='biz-badge'>" + bizDisplay + "</span>") +
             "</div></a></div>" +
             "<div class='hdr-right'>" +
-            "<a href='/chat/" + token + "' class='nav-action-btn' title='New Transaction'><i class='ti ti-plus'></i><span>RECORD</span></a>" +
+            "<a href='/chat/" + token + "' class='nav-action-btn' title='New Transaction'><i class='ti ti-plus'></i><span>Record</span></a>" +
             "</div>" +
             "</header>" + sidebar(token, active);
     }
@@ -38,19 +38,19 @@ public class HtmlTemplates {
             "<div class='sidebar-hdr'>" +
             "<div class='sidebar-brand-box'>" +
             "<div class='sidebar-logo-badge'><img src='" + LOGO_DATA + "' style='width:32px;height:32px;' alt='Logo'></div>" +
-            "<div><div class='sidebar-brand'>SMARTLEDGER</div><div class='sidebar-tagline'>FINANCIAL SYSTEM &middot; COS 202</div></div>" +
+            "<div><div class='sidebar-brand'>SmartLedger</div><div class='sidebar-tagline'>Bookkeeping for small traders</div></div>" +
             "</div>" +
             "<button onclick='toggleSidebar()' class='sidebar-close' aria-label='Close Navigation'><i class='ti ti-x'></i></button>" +
             "</div>" +
             "<nav class='sidebar-nav'>" +
-            "<div class='nav-section-label'>CORE LEDGER</div>" +
+            "<div class='nav-section-label'>Main</div>" +
             sideLink("/dashboard/" + token, "Overview", "ti-layout-grid", active.equals("overview")) +
-            sideLink("/chat/" + token, "Chat & Record", "ti-message-circle", active.equals("chat")) +
+            sideLink("/chat/" + token, "Chat", "ti-message-circle", active.equals("chat")) +
             sideLink("/dashboard/" + token + "/transactions", "Transactions", "ti-receipt", active.equals("transactions")) +
-            sideLink("/dashboard/" + token + "/debts", "Debts & Balances", "ti-scale", active.equals("debts")) +
-            "<div class='nav-section-label'>INTELLIGENCE</div>" +
-            sideLink("/analysis/" + token, "Analytics & Trends", "ti-chart-pie", active.equals("analysis")) +
-            sideLink("/report/" + token, "Statement & Audit", "ti-file-analytics", active.equals("report")) +
+            sideLink("/dashboard/" + token + "/debts", "Debts", "ti-scale", active.equals("debts")) +
+            "<div class='nav-section-label'>Reports</div>" +
+            sideLink("/analysis/" + token, "Analysis", "ti-chart-pie", active.equals("analysis")) +
+            sideLink("/report/" + token, "Report", "ti-file-analytics", active.equals("report")) +
             "<div class='sidebar-divider'></div>" +
             "<a href='/' class='side-link logout-link'><i class='ti ti-logout'></i> Log Out</a>" +
             "</nav></aside>" +
@@ -67,8 +67,8 @@ public class HtmlTemplates {
         return "</div></div>" +
             "<footer class='app-footer'>" +
             "<div class='footer-inner'>" +
-            "<div>SMARTLEDGER SYSTEM &middot; BROWSER DESKTOP & MOBILE EDITION</div>" +
-            "<div class='footer-sub'>DESIGNED WITH SWISS TYPOGRAPHIC GRID PRECISION &middot; COS 202</div>" +
+            "<div>SmartLedger &#169; 2026 &#8212; COS 202 Group 22</div>" +
+            "<div class='footer-sub'>Aligned with UN SDG 8 (Decent Work) and SDG 9 (Industry, Innovation)</div>" +
             "</div>" +
             "</footer>" +
             OBSERVER_JS +
@@ -96,10 +96,10 @@ public class HtmlTemplates {
 
     public static String greeting(String username, double todaySales, String businessName) {
         int hour = java.time.LocalTime.now().getHour();
-        String timeGreet = hour >= 5 && hour < 12 ? "GOOD MORNING" : hour < 17 ? "GOOD AFTERNOON" : hour < 21 ? "GOOD EVENING" : "HELLO";
-        String salesMsg = todaySales > 0 ? "You have recorded <strong style='color:var(--sales-val);'>&#8358;" + formatAmount(todaySales) + "</strong> in gross sales today." : "No transactions posted yet today.";
+        String timeGreet = hour >= 5 && hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : hour < 21 ? "Good evening" : "Hello";
+        String salesMsg = todaySales > 0 ? "You've made &#8358;" + formatAmount(todaySales) + " in sales today." : "No sales recorded yet today.";
         return "<div class='greeting anim-on-scroll'>" +
-            "<div class='greeting-main'><h2>" + timeGreet + ", " + escapeHtml(username).toUpperCase() + "</h2>" +
+            "<div class='greeting-main'><h2>" + timeGreet + ", " + escapeHtml(username) + "</h2>" +
             "<p class='greeting-sub'>" + salesMsg + "</p></div>" +
             "</div>";
     }
@@ -109,11 +109,11 @@ public class HtmlTemplates {
         double ratio = sales > 0 ? (expenses / sales) * 100 : 0;
         String color, label, tip, statusClass;
         if (profit > 0 && ratio < 50) {
-            color = "var(--brand-primary)"; label = "HEALTHY CASHFLOW"; tip = "Operational margins are strong and spending is within budget."; statusClass = "healthy";
+            color = "var(--brand-primary)"; label = "Healthy"; tip = "Business is in good shape!"; statusClass = "healthy";
         } else if (profit > 0) {
-            color = "var(--supply-val)"; label = "MODERATE MARGIN"; tip = "Operational expenses and restocking are rising relative to revenue."; statusClass = "moderate";
+            color = "var(--supply-val)"; label = "Okay"; tip = "Expenses are creeping up."; statusClass = "moderate";
         } else {
-            color = "var(--expense-val)"; label = "DEFICIT STATE"; tip = "Outflows currently exceed inflows. Review recent expense line items."; statusClass = "warning";
+            color = "var(--expense-val)"; label = "Needs Attention"; tip = "Spending exceeds earnings."; statusClass = "warning";
         }
         return "<div class='health-card " + statusClass + " anim-on-scroll'>" +
             "<div class='health-dot' style='background:" + color + ";'></div>" +
@@ -124,26 +124,26 @@ public class HtmlTemplates {
     public static String streakBanner(int streak) {
         if (streak < 2) return "";
         return "<div class='streak-banner anim-on-scroll'>" +
-            "<span class='streak-tag'>CONSISTENCY</span>" +
-            "<span><strong>" + streak + "-DAY ACTIVE RECORDING STREAK</strong> &mdash; Continuous daily ledger entries maintained</span></div>";
+            "<span class='streak-tag'>Streak</span>" +
+            "<span><strong>" + streak + "-day recording streak! Keep it going.</span></div>";
     }
 
     public static String pieChart(double sales, double expenses, double supplies) {
         double total = sales + expenses + supplies;
-        if (total == 0) return "<p class='empty'>No data available for breakdown.</p>";
+        if (total == 0) return "<p class='empty'>No data yet.</p>";
         double s1 = sales/total*360, s2 = expenses/total*360, s3 = supplies/total*360;
         double a1 = 0, a2 = s1, a3 = s1+s2;
         return "<div class='donut-container anim-on-scroll'>" +
             "<svg width='180' height='180' viewBox='0 0 180 180' class='donut-svg'>" +
             pieSlice(90,90,75,a1,a1+s1,"#2e7d32") + pieSlice(90,90,75,a2,a2+s2,"#c62828") + pieSlice(90,90,75,a3,a3+s3,"#e65100") +
-            "<circle cx='90' cy='90' r='50' fill='#ffffff' stroke='#111827' stroke-width='1.5'/>" +
-            "<text x='90' y='82' text-anchor='middle' font-size='9' font-weight='800' fill='#666' letter-spacing='1'>TOTAL FLOW</text>" +
+            "<circle cx='90' cy='90' r='50' fill='#ffffff' stroke='#f0f0f0' stroke-width='1'/>" +
+            "<text x='90' y='82' text-anchor='middle' font-size='9' font-weight='800' fill='#666' letter-spacing='1'>Total</text>" +
             "<text x='90' y='102' text-anchor='middle' font-size='12' font-weight='800' fill='#111827'>&#8358;" + formatAmount(total) + "</text>" +
             "</svg>" +
             "<div class='chart-legend'>" +
-            "<div class='legend-item'><span class='legend-dot' style='background:#2e7d32;'></span><span class='legend-text'>SALES (" + (int)(sales/total*100) + "%)</span></div>" +
-            "<div class='legend-item'><span class='legend-dot' style='background:#c62828;'></span><span class='legend-text'>EXPENSES (" + (int)(expenses/total*100) + "%)</span></div>" +
-            "<div class='legend-item'><span class='legend-dot' style='background:#e65100;'></span><span class='legend-text'>SUPPLIES (" + (int)(supplies/total*100) + "%)</span></div>" +
+            "<div class='legend-item'><span class='legend-dot' style='background:#2e7d32;'></span><span class='legend-text'>Sales (" + (int)(sales/total*100) + "%)</span></div>" +
+            "<div class='legend-item'><span class='legend-dot' style='background:#c62828;'></span><span class='legend-text'>Expenses (" + (int)(expenses/total*100) + "%)</span></div>" +
+            "<div class='legend-item'><span class='legend-dot' style='background:#e65100;'></span><span class='legend-text'>Supplies (" + (int)(supplies/total*100) + "%)</span></div>" +
             "</div></div>";
     }
 
@@ -154,23 +154,23 @@ public class HtmlTemplates {
         int x1 = (int)(cx + r * Math.cos(sr)), y1 = (int)(cy + r * Math.sin(sr));
         int x2 = (int)(cx + r * Math.cos(er)), y2 = (int)(cy + r * Math.sin(er));
         int large = (endAngle - startAngle) > 180 ? 1 : 0;
-        return "<path d='M" + cx + "," + cy + " L" + x1 + "," + y1 + " A" + r + "," + r + " 0 " + large + ",1 " + x2 + "," + y2 + " Z' fill='" + color + "' stroke='#111827' stroke-width='1.5'/>";
+        return "<path d='M" + cx + "," + cy + " L" + x1 + "," + y1 + " A" + r + "," + r + " 0 " + large + ",1 " + x2 + "," + y2 + " Z' fill='" + color + "' stroke='#fff' stroke-width='2'/>";
     }
 
     public static String barChart(double sales, double expenses, double supplies, double debts, double payments) {
         double max = Math.max(1, Math.max(sales, Math.max(expenses, Math.max(supplies, Math.max(debts, payments)))));
         StringBuilder svg = new StringBuilder();
         svg.append("<div class='anim-on-scroll chart-wrapper'><svg width='100%' viewBox='0 0 360 200' xmlns='http://www.w3.org/2000/svg'>");
-        svg.append("<line x1='30' y1='155' x2='340' y2='155' stroke='#111827' stroke-width='2'/>");
+        svg.append("<line x1='30' y1='155' x2='340' y2='155' stroke='#ccc' stroke-width='1'/>");
         svg.append("<line x1='30' y1='85' x2='340' y2='85' stroke='#e5e7eb' stroke-dasharray='2 2' stroke-width='1'/>");
         svg.append("<line x1='30' y1='15' x2='340' y2='15' stroke='#e5e7eb' stroke-dasharray='2 2' stroke-width='1'/>");
 
         String[][] bars = {
-            {"SALES", String.valueOf(sales), "#2e7d32"},
-            {"EXPENSE", String.valueOf(expenses), "#c62828"},
-            {"SUPPLY", String.valueOf(supplies), "#e65100"},
-            {"DEBT", String.valueOf(debts), "#6a1b9a"},
-            {"PAID", String.valueOf(payments), "#1565c0"}
+            {"Sales", String.valueOf(sales), "#2e7d32"},
+            {"Expense", String.valueOf(expenses), "#c62828"},
+            {"Supply", String.valueOf(supplies), "#e65100"},
+            {"Debt", String.valueOf(debts), "#6a1b9a"},
+            {"Paid", String.valueOf(payments), "#1565c0"}
         };
 
         for (int i = 0; i < bars.length; i++) {
@@ -182,7 +182,7 @@ public class HtmlTemplates {
             svg.append("<rect x='").append(x).append("' y='20' width='36' height='135' fill='#f4f4f5' stroke='#e5e7eb' stroke-width='1'/>");
             // Value bar
             svg.append("<rect x='").append(x).append("' y='").append(y).append("' width='36' height='").append(h)
-               .append("' fill='").append(bars[i][2]).append("' stroke='#111827' stroke-width='1.5' class='bar-el'/>");
+               .append("' fill='").append(bars[i][2]).append("' class='bar-el'/>");
             if (val > 0) {
                 svg.append("<text x='").append(x+18).append("' y='").append(Math.max(14, y-6))
                    .append("' text-anchor='middle' font-size='9' font-weight='800' fill='#111827'>")
@@ -198,7 +198,7 @@ public class HtmlTemplates {
     public static String emptyState(String message, String ctaText, String ctaHref) {
         return "<div class='empty-state anim-on-scroll'>" +
             "<div class='empty-icon-wrap'><i class='ti ti-receipt-off'></i></div>" +
-            "<h4>NO TRANSACTIONS RECORDED</h4>" +
+            "<h4>No transactions yet</h4>" +
             "<p>" + message + "</p>" +
             (ctaHref != null ? "<a href='" + ctaHref + "' class='btn btn-primary'><i class='ti ti-plus'></i> " + ctaText + "</a>" : "") +
             "</div>";
@@ -222,7 +222,7 @@ public class HtmlTemplates {
         "--bg-canvas:#ffffff;" +
         "--bg-surface:#ffffff;" +
         "--bg-subtle:#f4f4f5;" +
-        "--border-rule:#111827;" +
+        "--border-rule:#e0e0e0;" +
         "--border-light:#e5e7eb;" +
         "--text-primary:#111827;" +
         "--text-secondary:#4b5563;" +
@@ -254,12 +254,12 @@ public class HtmlTemplates {
         ".logo-link:hover .logo-badge{display:flex;align-items:center;justify-content:center;transition:transform 0.15s;}" +
         ".logo-img{width:32px;height:32px;object-fit:contain;}" +
         ".logo-meta{display:flex;align-items:center;gap:10px;}" +
-        ".logo-text{font-size:16px;font-weight:900;color:var(--text-primary);letter-spacing:1px;text-transform:uppercase;}" +
-        ".biz-badge{font-size:11px;font-weight:800;color:#ffffff;background:var(--brand-primary);padding:3px 8px;border-radius:2px;border:1px solid var(--border-rule);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0.5px;text-transform:uppercase;}" +
+        ".logo-text{font-size:16px;font-weight:900;color:var(--text-primary);}" +
+        ".biz-badge{font-size:11px;font-weight:800;color:#ffffff;background:var(--brand-primary);padding:3px 8px;border-radius:8px;border:1px solid var(--border-rule);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}" +
         ".hdr-right{display:flex;align-items:center;gap:10px;}" +
-        ".nav-action-btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand-primary);color:#fff;text-decoration:none;font-size:12px;font-weight:800;letter-spacing:0.8px;padding:8px 16px;border:1.5px solid var(--border-rule);border-radius:2px;transition:all 0.1s;}" +
+        ".nav-action-btn{display:inline-flex;align-items:center;gap:6px;background:var(--brand-primary);color:#fff;text-decoration:none;font-size:12px;font-weight:800;padding:8px 16px;border:1.5px solid var(--border-rule);border-radius:8px;transition:all 0.1s;}" +
         ".nav-action-btn:hover{background:var(--brand-dark);transform:translate(-1px,-1px);}" +
-        ".hamburger{background:transparent;border:1.5px solid var(--border-rule);font-size:18px;cursor:pointer;color:var(--text-primary);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:2px;transition:all 0.1s;}" +
+        ".hamburger{background:transparent;border:1.5px solid var(--border-rule);font-size:18px;cursor:pointer;color:var(--text-primary);width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:all 0.1s;}" +
         ".hamburger:hover{background:var(--bg-subtle);}" +
         
         // Sidebar
@@ -270,13 +270,13 @@ public class HtmlTemplates {
         ".sidebar-hdr{padding:24px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--border-rule);background:var(--bg-subtle);}" +
         ".sidebar-brand-box{display:flex;align-items:center;gap:12px;}" +
         ".sidebar-logo-badge{display:flex;align-items:center;justify-content:center;}" +
-        ".sidebar-brand{font-size:16px;font-weight:900;color:var(--text-primary);letter-spacing:0.8px;}" +
-        ".sidebar-tagline{font-size:10px;color:var(--text-muted);font-weight:700;letter-spacing:0.5px;}" +
-        ".sidebar-close{background:none;border:1.5px solid var(--border-rule);font-size:16px;color:var(--text-primary);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:2px;}" +
+        ".sidebar-brand{font-size:16px;font-weight:900;color:var(--text-primary);}" +
+        ".sidebar-tagline{font-size:10px;color:var(--text-muted);font-weight:700;}" +
+        ".sidebar-close{background:none;border:1.5px solid var(--border-rule);font-size:16px;color:var(--text-primary);cursor:pointer;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;}" +
         ".sidebar-close:hover{background:#ffffff;}" +
         ".sidebar-nav{padding:16px 14px;}" +
-        ".nav-section-label{font-size:11px;font-weight:900;color:var(--text-primary);letter-spacing:1px;padding:12px 10px 6px;text-transform:uppercase;border-bottom:1.5px solid var(--border-rule);margin-bottom:6px;}" +
-        ".side-link{display:flex;align-items:center;gap:12px;padding:10px 12px;color:var(--text-secondary);text-decoration:none;font-size:13px;font-weight:700;border:1px solid transparent;border-radius:2px;transition:all 0.1s;margin-bottom:3px;}" +
+        ".nav-section-label{font-size:11px;font-weight:900;color:var(--text-primary);padding:12px 10px 6px;border-bottom:1.5px solid var(--border-rule);margin-bottom:6px;}" +
+        ".side-link{display:flex;align-items:center;gap:12px;padding:10px 12px;color:var(--text-secondary);text-decoration:none;font-size:13px;font-weight:700;border:1px solid transparent;border-radius:8px;transition:all 0.1s;margin-bottom:3px;}" +
         ".side-link:hover{color:var(--text-primary);background:var(--bg-subtle);border-color:var(--border-light);}" +
         ".side-link.active{background:var(--brand-light);color:var(--brand-primary);font-weight:800;border-color:var(--brand-primary);border-left:4px solid var(--brand-primary);}" +
         ".side-link i{font-size:18px;}" +
@@ -295,22 +295,22 @@ public class HtmlTemplates {
 
         // Greeting & Status Cards
         ".greeting{margin-bottom:24px;border-bottom:2px solid var(--border-rule);padding-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;}" +
-        ".greeting h2{font-size:26px;font-weight:900;color:var(--text-primary);letter-spacing:-0.5px;line-height:1.1;}" +
+        ".greeting h2{font-size:26px;font-weight:900;color:var(--text-primary);line-height:1.1;}" +
         ".greeting-sub{color:var(--text-secondary);font-size:13px;font-weight:500;margin-top:4px;}" +
-        ".health-card{display:flex;align-items:center;gap:14px;background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;padding:14px 18px;margin-bottom:22px;}" +
+        ".health-card{display:flex;align-items:center;gap:14px;background:#ffffff;border:1.5px solid var(--border-rule);border-radius:8px;padding:14px 18px;margin-bottom:22px;}" +
         ".health-dot{width:12px;height:12px;border:1.5px solid var(--border-rule);border-radius:0;flex-shrink:0;}" +
-        ".health-content strong{font-size:12px;font-weight:900;color:var(--text-primary);letter-spacing:0.5px;text-transform:uppercase;}" +
+        ".health-content strong{font-size:12px;font-weight:900;color:var(--text-primary);}" +
         ".health-content p{margin:2px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.4;}" +
-        ".streak-banner{background:var(--bg-subtle);border:1.5px solid var(--border-rule);border-radius:2px;padding:12px 16px;margin-bottom:22px;font-size:12px;color:var(--text-primary);display:flex;align-items:center;gap:10px;}" +
-        ".streak-tag{background:var(--text-primary);color:#fff;font-size:10px;font-weight:900;padding:2px 6px;letter-spacing:0.8px;}" +
+        ".streak-banner{background:var(--bg-subtle);border:1.5px solid var(--border-rule);border-radius:8px;padding:12px 16px;margin-bottom:22px;font-size:12px;color:var(--text-primary);display:flex;align-items:center;gap:10px;}" +
+        ".streak-tag{background:var(--text-primary);color:#fff;font-size:10px;font-weight:900;padding:2px 6px;}" +
 
         // Stat Cards (Swiss Grid Layout)
         ".cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;}" +
-        ".card{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;padding:16px 14px;transition:all 0.1s;position:relative;}" +
+        ".card{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:8px;padding:16px 14px;transition:all 0.1s;position:relative;}" +
         ".card:hover{background:var(--bg-subtle);transform:translate(-1px,-1px);}" +
         ".card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid var(--border-light);padding-bottom:4px;}" +
-        ".card h3,.card-label{font-size:11px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.8px;}" +
-        ".card .value{font-size:22px;font-weight:900;letter-spacing:-0.5px;color:var(--text-primary);font-feature-settings:'tnum';font-variant-numeric:tabular-nums;}" +
+        ".card h3,.card-label{font-size:11px;font-weight:900;color:var(--text-primary);}" +
+        ".card .value{font-size:22px;font-weight:900;color:var(--text-primary);font-feature-settings:'tnum';font-variant-numeric:tabular-nums;}" +
         ".card.sales .value{color:var(--sales-val);}" +
         ".card.expenses .value{color:var(--expense-val);}" +
         ".card.supplies .value{color:var(--supply-val);}" +
@@ -321,17 +321,17 @@ public class HtmlTemplates {
         ".card.profit.negative .value{color:var(--expense-val);}" +
 
         // Section Containers
-        ".section{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;padding:20px;margin-bottom:24px;}" +
+        ".section{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:8px;padding:20px;margin-bottom:24px;}" +
         ".section.alt{background:var(--bg-subtle);}" +
-        ".section h2{font-size:13px;font-weight:900;color:var(--text-primary);margin-bottom:18px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;border-bottom:1.5px solid var(--border-rule);padding-bottom:8px;}" +
+        ".section h2{font-size:13px;font-weight:900;color:var(--text-primary);margin-bottom:18px;display:flex;align-items:center;gap:8px;border-bottom:1.5px solid var(--border-rule);padding-bottom:8px;}" +
 
         // Tables (Swiss Grid Accounting Table)
         "table{width:100%;border-collapse:collapse;font-size:13px;}" +
-        "th{background:var(--bg-subtle);color:var(--text-primary);padding:10px 12px;text-align:left;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:0.8px;border-top:1.5px solid var(--border-rule);border-bottom:1.5px solid var(--border-rule);}" +
+        "th{background:var(--bg-subtle);color:var(--text-primary);padding:10px 12px;text-align:left;font-size:11px;font-weight:900;border-top:1.5px solid var(--border-rule);border-bottom:1.5px solid var(--border-rule);}" +
         "td{padding:12px;border-bottom:1px solid var(--border-light);color:var(--text-primary);font-weight:500;}" +
         "tr{transition:background-color 0.1s;}" +
         "tr:hover{background:var(--bg-subtle);}" +
-        ".badge{padding:2px 6px;border:1px solid var(--border-rule);border-radius:2px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;display:inline-block;}" +
+        ".badge{padding:2px 6px;border:1px solid var(--border-rule);border-radius:8px;font-size:10px;font-weight:800;display:inline-block;}" +
         ".badge-SALE{background:var(--brand-light);color:var(--sales-val);border-color:var(--sales-val);}" +
         ".badge-EXPENSE{background:#ffebee;color:var(--expense-val);border-color:var(--expense-val);}" +
         ".badge-SUPPLY{background:#fff3e0;color:var(--supply-val);border-color:var(--supply-val);}" +
@@ -340,15 +340,15 @@ public class HtmlTemplates {
         ".badge-DELIVERY{background:#e0f2f1;color:#00796b;border-color:#00796b;}" +
         ".empty{color:var(--text-muted);padding:24px 0;font-size:13px;text-align:center;font-weight:600;}" +
         ".empty-state{text-align:center;padding:40px 20px;border:1.5px dashed var(--border-rule);background:var(--bg-subtle);}" +
-        ".empty-icon-wrap{width:44px;height:44px;border:1.5px solid var(--border-rule);background:#ffffff;color:var(--text-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px;border-radius:2px;}" +
-        ".empty-state h4{font-size:14px;font-weight:900;color:var(--text-primary);margin-bottom:4px;letter-spacing:0.5px;}" +
+        ".empty-icon-wrap{width:44px;height:44px;border:1.5px solid var(--border-rule);background:#ffffff;color:var(--text-primary);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px;border-radius:8px;}" +
+        ".empty-state h4{font-size:14px;font-weight:900;color:var(--text-primary);margin-bottom:4px;}" +
         ".empty-state p{font-size:12px;color:var(--text-secondary);margin-bottom:16px;}" +
 
         // Transaction Card Items
-        ".txn-card{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;padding:14px 16px;margin-bottom:10px;transition:all 0.1s;}" +
+        ".txn-card{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:8px;padding:14px 16px;margin-bottom:10px;transition:all 0.1s;}" +
         ".txn-card:hover{background:var(--bg-subtle);transform:translate(-1px,-1px);}" +
         ".txn-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}" +
-        ".txn-amount{font-size:16px;font-weight:900;color:var(--text-primary);letter-spacing:-0.3px;font-feature-settings:'tnum';font-variant-numeric:tabular-nums;}" +
+        ".txn-amount{font-size:16px;font-weight:900;color:var(--text-primary);font-feature-settings:'tnum';font-variant-numeric:tabular-nums;}" +
         ".txn-desc{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}" +
         ".txn-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:6px;border-top:1px solid var(--border-light);padding-top:6px;}" +
         ".txn-meta{font-size:11px;color:var(--text-muted);font-weight:600;}" +
@@ -356,7 +356,7 @@ public class HtmlTemplates {
 
         // Category Filter Tabs
         ".cat-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:20px;padding-bottom:2px;-webkit-overflow-scrolling:touch;}" +
-        ".cat-tab{padding:8px 14px;border-radius:2px;font-size:11px;font-weight:800;text-decoration:none;color:var(--text-primary);background:#ffffff;border:1.5px solid var(--border-rule);white-space:nowrap;transition:all 0.1s;text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".cat-tab{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:800;text-decoration:none;color:var(--text-primary);background:#ffffff;border:1.5px solid var(--border-rule);white-space:nowrap;transition:all 0.1s;}" +
         ".cat-tab:hover{background:var(--bg-subtle);}" +
         ".cat-tab.active{background:var(--text-primary);color:#ffffff;border-color:var(--text-primary);}" +
         ".cat-tab.active.t-SALE{background:var(--sales-val);border-color:var(--sales-val);color:#fff;}" +
@@ -366,7 +366,7 @@ public class HtmlTemplates {
         ".cat-tab.active.t-PAYMENT{background:var(--payment-val);border-color:var(--payment-val);color:#fff;}" +
 
         // Buttons
-        ".btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:12px;cursor:pointer;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.1s;text-decoration:none;}" +
+        ".btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border:1.5px solid var(--border-rule);border-radius:8px;font-size:12px;cursor:pointer;font-weight:800;transition:all 0.1s;text-decoration:none;}" +
         ".btn:hover{transform:translate(-1px,-1px);}" +
         ".btn:active{transform:translate(1px,1px);}" +
         ".btn-primary{background:var(--brand-primary);color:#ffffff;border-color:var(--border-rule);}" +
@@ -375,13 +375,13 @@ public class HtmlTemplates {
         ".btn-danger:hover{background:#fecaca;}" +
 
         // Debts
-        ".debt-card{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:2px;padding:16px;margin-bottom:12px;transition:all 0.1s;}" +
+        ".debt-card{background:#ffffff;border:1.5px solid var(--border-rule);border-radius:8px;padding:16px;margin-bottom:12px;transition:all 0.1s;}" +
         ".debt-card:hover{background:var(--bg-subtle);}" +
-        ".debt-card h3{margin-bottom:8px;color:var(--text-primary);font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".debt-card h3{margin-bottom:8px;color:var(--text-primary);font-size:14px;font-weight:900;}" +
         ".progress-bar{height:8px;background:var(--bg-subtle);border:1px solid var(--border-rule);border-radius:0;overflow:hidden;margin:12px 0 8px;}" +
         ".progress-animate{height:100%;border-radius:0;width:0;background:var(--brand-primary);transition:width 0.8s ease;}" +
         ".debt-amounts{display:flex;gap:16px;font-size:12px;flex-wrap:wrap;color:var(--text-secondary);font-weight:600;}" +
-        ".status-badge{padding:2px 6px;border:1px solid var(--border-rule);border-radius:2px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".status-badge{padding:2px 6px;border:1px solid var(--border-rule);border-radius:8px;font-size:10px;font-weight:800;}" +
         ".status-unpaid{background:#ffebee;color:var(--expense-val);border-color:var(--expense-val);}" +
         ".status-partial{background:#fff3e0;color:var(--supply-val);border-color:var(--supply-val);}" +
         ".status-paid{background:var(--brand-light);color:var(--sales-val);border-color:var(--sales-val);}" +
@@ -389,70 +389,70 @@ public class HtmlTemplates {
         // Chat UI
         ".chat-container{padding:16px 0;}" +
         ".chat-messages{min-height:360px;max-height:480px;overflow-y:auto;padding:12px 4px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;}" +
-        ".chat-msg{padding:12px 16px;border-radius:2px;font-size:13px;line-height:1.5;max-width:85%;border:1.5px solid var(--border-rule);}" +
+        ".chat-msg{padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.5;max-width:85%;border:1.5px solid var(--border-rule);}" +
         ".chat-msg.user{background:var(--brand-primary);color:#ffffff;align-self:flex-end;border-color:var(--border-rule);}" +
         ".chat-msg.system{background:var(--bg-subtle);border:1.5px solid var(--border-rule);color:var(--text-primary);align-self:flex-start;}" +
-        ".typing{display:flex;gap:5px;padding:12px 16px;align-self:flex-start;background:var(--bg-subtle);border:1.5px solid var(--border-rule);border-radius:2px;}" +
+        ".typing{display:flex;gap:5px;padding:12px 16px;align-self:flex-start;background:var(--bg-subtle);border:1.5px solid var(--border-rule);border-radius:8px;}" +
         ".typing span{width:6px;height:6px;background:var(--text-primary);border-radius:0;animation:typingBounce 1.2s infinite ease-in-out;}" +
         ".typing span:nth-child(2){animation-delay:0.15s;}" +
         ".typing span:nth-child(3){animation-delay:0.3s;}" +
         "@keyframes typingBounce{0%,80%,100%{transform:scale(0.8);opacity:0.4;}40%{transform:scale(1.2);opacity:1;}}" +
-        ".chat-input-bar{display:flex;gap:8px;background:#ffffff;padding:8px;border:1.5px solid var(--border-rule);border-radius:2px;}" +
-        ".chat-input-bar input{flex:1;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:13px;font-weight:600;color:var(--text-primary);background:#ffffff;outline:none;}" +
+        ".chat-input-bar{display:flex;gap:8px;background:#ffffff;padding:8px;border:1.5px solid var(--border-rule);border-radius:8px;}" +
+        ".chat-input-bar input{flex:1;padding:10px 14px;border:1.5px solid var(--border-rule);border-radius:8px;font-size:13px;font-weight:600;color:var(--text-primary);background:#ffffff;outline:none;}" +
         ".chat-input-bar input:focus{border-color:var(--brand-primary);}" +
-        ".chat-input-bar button{padding:10px 18px;border-radius:2px;}" +
+        ".chat-input-bar button{padding:10px 18px;border-radius:8px;}" +
         ".quick-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px;}" +
-        ".quick-chip{padding:6px 12px;border-radius:2px;background:#ffffff;border:1.5px solid var(--border-rule);color:var(--text-primary);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all 0.1s;text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".quick-chip{padding:6px 12px;border-radius:8px;background:#ffffff;border:1.5px solid var(--border-rule);color:var(--text-primary);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all 0.1s;}" +
         ".quick-chip:hover{background:var(--brand-light);border-color:var(--brand-primary);color:var(--brand-primary);}" +
 
         // Help & Confirmation
-        ".help-fab{position:fixed;bottom:80px;left:24px;width:38px;height:38px;border-radius:2px;background:#ffffff;color:var(--text-primary);border:1.5px solid var(--border-rule);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;transition:all 0.1s;}" +
+        ".help-fab{position:fixed;bottom:80px;left:24px;width:38px;height:38px;border-radius:8px;background:#ffffff;color:var(--text-primary);border:1.5px solid var(--border-rule);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;transition:all 0.1s;}" +
         ".help-fab:hover{background:var(--bg-subtle);transform:translate(-1px,-1px);}" +
         ".help-panel{position:fixed;right:-340px;top:0;width:320px;height:100vh;background:#ffffff;z-index:201;transition:right 0.25s ease;overflow-y:auto;padding:24px;border-left:2px solid var(--border-rule);}" +
         ".help-panel.open{right:0;}" +
-        ".help-example{padding:10px 12px;margin:6px 0;background:var(--bg-subtle);border:1px solid var(--border-rule);border-radius:2px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.1s;}" +
+        ".help-example{padding:10px 12px;margin:6px 0;background:var(--bg-subtle);border:1px solid var(--border-rule);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.1s;}" +
         ".help-example:hover{background:var(--brand-light);border-color:var(--brand-primary);color:var(--brand-primary);}" +
-        ".confirm-card{background:var(--bg-subtle);border:2px solid var(--border-rule);border-radius:2px;padding:14px 16px;margin:8px 0;}" +
+        ".confirm-card{background:var(--bg-subtle);border:2px solid var(--border-rule);border-radius:8px;padding:14px 16px;margin:8px 0;}" +
         ".confirm-card .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}" +
-        ".confirm-btn{background:var(--brand-primary);color:#fff;border:1.5px solid var(--border-rule);padding:8px 14px;border-radius:2px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;}" +
-        ".change-btn{background:#ffffff;color:var(--text-primary);border:1.5px solid var(--border-rule);padding:8px 14px;border-radius:2px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;}" +
-        ".cancel-btn{background:#fee2e2;color:var(--expense-val);border:1.5px solid var(--expense-val);padding:8px 14px;border-radius:2px;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;cursor:pointer;}" +
-        ".category-select{padding:6px 10px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:12px;font-weight:700;margin-top:6px;background:#ffffff;color:var(--text-primary);}" +
-        ".toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:2px;color:#fff;font-size:12px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;z-index:300;opacity:0;transform:translateY(-10px);transition:all 0.2s ease;border:1.5px solid var(--border-rule);background:var(--text-primary);}" +
+        ".confirm-btn{background:var(--brand-primary);color:#fff;border:1.5px solid var(--border-rule);padding:8px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;}" +
+        ".change-btn{background:#ffffff;color:var(--text-primary);border:1.5px solid var(--border-rule);padding:8px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;}" +
+        ".cancel-btn{background:#fee2e2;color:var(--expense-val);border:1.5px solid var(--expense-val);padding:8px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;}" +
+        ".category-select{padding:6px 10px;border:1.5px solid var(--border-rule);border-radius:8px;font-size:12px;font-weight:700;margin-top:6px;background:#ffffff;color:var(--text-primary);}" +
+        ".toast{position:fixed;top:20px;right:20px;padding:12px 20px;border-radius:8px;color:#fff;font-size:12px;font-weight:800;z-index:300;opacity:0;transform:translateY(-10px);transition:all 0.2s ease;border:1.5px solid var(--border-rule);background:var(--text-primary);}" +
         ".toast.show{opacity:1;transform:translateY(0);}" +
         ".toast.success{background:var(--brand-primary);}" +
-        ".fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:2px;background:var(--brand-primary);color:#fff;font-size:20px;border:2px solid var(--border-rule);cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;z-index:50;transition:all 0.1s;}" +
+        ".fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:8px;background:var(--brand-primary);color:#fff;font-size:20px;border:2px solid var(--border-rule);cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;z-index:50;transition:all 0.1s;}" +
         ".fab:hover{background:var(--brand-dark);transform:translate(-1px,-1px);}" +
 
         // Chart & Insights Styles
         ".donut-container{display:flex;flex-direction:column;align-items:center;padding:12px 0;}" +
         ".donut-svg{margin-bottom:12px;}" +
         ".chart-legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;}" +
-        ".legend-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text-primary);letter-spacing:0.5px;}" +
+        ".legend-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text-primary);}" +
         ".legend-dot{width:10px;height:10px;border:1px solid var(--border-rule);border-radius:0;}" +
         ".filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}" +
-        ".filter-bar select,.filter-bar input{padding:8px 12px;border:1.5px solid var(--border-rule);border-radius:2px;font-size:12px;font-weight:700;background:#ffffff;color:var(--text-primary);}" +
+        ".filter-bar select,.filter-bar input{padding:8px 12px;border:1.5px solid var(--border-rule);border-radius:8px;font-size:12px;font-weight:700;background:#ffffff;color:var(--text-primary);}" +
         ".filter-bar select:focus,.filter-bar input:focus{border-color:var(--brand-primary);outline:none;}" +
-        ".advice-card{background:#ffffff;border-radius:2px;padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--border-rule);border-left:5px solid var(--brand-primary);}" +
+        ".advice-card{background:#ffffff;border-radius:8px;padding:14px 16px;margin-bottom:12px;border:1.5px solid var(--border-rule);border-left:5px solid var(--brand-primary);}" +
         ".advice-card.warning{border-left-color:var(--supply-val);}" +
         ".advice-card.danger{border-left-color:var(--expense-val);}" +
-        ".advice-card h4{margin-bottom:4px;color:var(--text-primary);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:0.5px;}" +
+        ".advice-card h4{margin-bottom:4px;color:var(--text-primary);font-size:12px;font-weight:900;}" +
         ".advice-card p{color:var(--text-secondary);font-size:12px;line-height:1.5;font-weight:500;}" +
         ".period-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}" +
-        ".period-btn{padding:8px 16px;border-radius:2px;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;border:1.5px solid var(--border-rule);color:var(--text-primary);background:#ffffff;transition:all 0.1s;}" +
+        ".period-btn{padding:8px 16px;border-radius:8px;text-decoration:none;font-size:11px;font-weight:800;border:1.5px solid var(--border-rule);color:var(--text-primary);background:#ffffff;transition:all 0.1s;}" +
         ".period-btn:hover{background:var(--bg-subtle);}" +
         ".period-btn.active{background:var(--text-primary);color:#ffffff;border-color:var(--text-primary);}" +
-        ".chart-container{background:#ffffff;border-radius:2px;padding:18px;margin-bottom:20px;border:1.5px solid var(--border-rule);}" +
-        ".chart-container h3{color:var(--text-primary);font-size:13px;font-weight:900;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border-light);padding-bottom:6px;}" +
-        ".carousel{position:relative;overflow:hidden;border-radius:2px;margin-bottom:22px;background:var(--bg-subtle);border:1.5px solid var(--border-rule);}" +
+        ".chart-container{background:#ffffff;border-radius:8px;padding:18px;margin-bottom:20px;border:1.5px solid var(--border-rule);}" +
+        ".chart-container h3{color:var(--text-primary);font-size:13px;font-weight:900;margin-bottom:14px;border-bottom:1px solid var(--border-light);padding-bottom:6px;}" +
+        ".carousel{position:relative;overflow:hidden;border-radius:8px;margin-bottom:22px;background:var(--bg-subtle);border:1.5px solid var(--border-rule);}" +
         ".carousel-track{display:flex;transition:transform 0.4s ease;}" +
         ".carousel-slide{min-width:100%;padding:24px 20px;text-align:center;}" +
-        ".carousel-slide h3{font-size:11px;color:var(--text-primary);text-transform:uppercase;letter-spacing:1px;font-weight:900;margin-bottom:6px;}" +
-        ".carousel-slide .big-num{font-size:32px;font-weight:900;color:var(--brand-primary);letter-spacing:-0.5px;font-feature-settings:'tnum';font-variant-numeric:tabular-nums;}" +
+        ".carousel-slide h3{font-size:11px;color:var(--text-primary);font-weight:900;margin-bottom:6px;}" +
+        ".carousel-slide .big-num{font-size:32px;font-weight:900;color:var(--brand-primary);font-feature-settings:'tnum';font-variant-numeric:tabular-nums;}" +
         ".carousel-dots{display:flex;justify-content:center;gap:6px;padding:8px;border-top:1px solid var(--border-light);}" +
         ".carousel-dots span{width:8px;height:8px;border-radius:0;border:1px solid var(--border-rule);background:#ffffff;cursor:pointer;transition:all 0.1s;}" +
         ".carousel-dots span.active{background:var(--text-primary);width:20px;}" +
-        ".app-footer{text-align:center;padding:24px 16px;color:var(--text-muted);font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;border-top:2px solid var(--border-rule);background:var(--bg-subtle);}" +
+        ".app-footer{text-align:center;padding:24px 16px;color:var(--text-muted);font-size:11px;font-weight:700;border-top:2px solid var(--border-rule);background:var(--bg-subtle);}" +
         ".footer-inner{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:4px;}" +
         ".footer-sub{font-size:10px;color:var(--text-muted);font-weight:600;}" +
         "@media print{.app-header,.sidebar,.sidebar-overlay,.fab,.help-fab,.no-print,.app-footer{display:none!important;}.device-frame{max-width:100%;margin:0;box-shadow:none;border:none;border-radius:0;}.app-shell{min-height:auto;background:#fff;}}" +

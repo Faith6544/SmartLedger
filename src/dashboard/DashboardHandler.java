@@ -3,14 +3,12 @@ package dashboard;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import database.TransactionDAO;
-import database.ChatMessageDAO;
 import database.UserDAO;
-import model.*;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import model.*;
 
 public class DashboardHandler implements HttpHandler {
 
@@ -60,8 +58,8 @@ public class DashboardHandler implements HttpHandler {
         double debts = transactionDAO.getTotalByType(uid, TransactionType.DEBT);
         double payments = transactionDAO.getTotalByType(uid, TransactionType.PAYMENT);
         double deliveries = transactionDAO.getTotalByType(uid, TransactionType.DELIVERY);
-        double profit = sales - expenses - supplies;
-
+       double personal = transactionDAO.getTotalByType(uid, TransactionType.PERSONAL);
+double profit = sales - expenses - supplies;
         double todaySales = transactionDAO.getTodayTotalByType(uid, TransactionType.SALE);
         double todayExpenses = transactionDAO.getTodayTotalByType(uid, TransactionType.EXPENSE);
         double todaySupplies = transactionDAO.getTodayTotalByType(uid, TransactionType.SUPPLY);
@@ -118,7 +116,7 @@ public class DashboardHandler implements HttpHandler {
         // Recent transactions
         h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-history' style='color:var(--brand-primary);'></i> RECENT POSTED TRANSACTIONS</h2>");
         if (recent.isEmpty()) {
-            h.append("" + HtmlTemplates.emptyState("No transactions recorded yet today.", "RECORD ENTRY", "/chat/" + token) + "");
+            h.append("" + HtmlTemplates.emptyState("No transactions recorded yet today.", "Record Entry", "/chat/" + token) + "");
         } else {
             h.append(transactionTable(recent, false, token));
         }
@@ -145,7 +143,7 @@ public class DashboardHandler implements HttpHandler {
             }
             h.append("<script>document.addEventListener('DOMContentLoaded',function(){");
             h.append("var t=document.createElement('div');");
-            h.append("t.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:#ffffff;color:#111827;border:2px solid #111827;padding:12px 24px;border-radius:2px;font-size:12px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;z-index:999;opacity:0;transition:all 0.3s ease;max-width:90%;text-align:center;';");
+            h.append("t.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:#ffffff;color:#111827;border:1px solid #e0e0e0;padding:12px 24px;border-radius:8px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:all 0.3s ease;max-width:90%;text-align:center;';");
             h.append("t.textContent='").append(toastMsg).append("';");
             h.append("document.body.appendChild(t);");
             h.append("setTimeout(function(){t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';},100);");
@@ -213,7 +211,7 @@ public class DashboardHandler implements HttpHandler {
         h.append("</div></div>");
 
         if (transactions.isEmpty()) {
-            h.append(HtmlTemplates.emptyState("No transactions match current filters.", "RECORD ENTRY", "/chat/" + token));
+            h.append(HtmlTemplates.emptyState("No transactions match current filters.", "Record Entry", "/chat/" + token));
         } else {
             // Card view
             h.append("<div id='cardView'>");
@@ -283,7 +281,7 @@ public class DashboardHandler implements HttpHandler {
         h.append("<div class='section'><h2><i class='ti ti-scale' style='color:var(--brand-primary);'></i> DEBTOR &amp; CREDIT LEDGER</h2>");
 
         if (debtSummary.isEmpty()) {
-            h.append(HtmlTemplates.emptyState("No active debtor positions recorded.", "RECORD DEBT", "/chat/" + token));
+            h.append(HtmlTemplates.emptyState("No active debtor positions recorded.", "Record Debt", "/chat/" + token));
         } else {
             double totalRemaining = 0;
             for (Map.Entry<String, double[]> entry : debtSummary.entrySet()) {
@@ -292,9 +290,9 @@ public class DashboardHandler implements HttpHandler {
                 totalRemaining += vals[2];
                 int paidPercent = vals[0] > 0 ? (int)(vals[1] / vals[0] * 100) : 0;
                 String statusClass, statusText;
-                if (vals[2] <= 0) { statusClass = "status-paid"; statusText = "FULLY PAID"; }
-                else if (vals[1] > 0) { statusClass = "status-partial"; statusText = "PARTIALLY PAID"; }
-                else { statusClass = "status-unpaid"; statusText = "UNPAID"; }
+                if (vals[2] <= 0) { statusClass = "status-paid"; statusText = "Fully Paid"; }
+                else if (vals[1] > 0) { statusClass = "status-partial"; statusText = "Partially Paid"; }
+                else { statusClass = "status-unpaid"; statusText = "Unpaid"; }
 
                 h.append("<div class='debt-card anim-on-scroll'>");
                 h.append("<div style='display:flex;justify-content:space-between;align-items:center;'>");
@@ -313,8 +311,8 @@ public class DashboardHandler implements HttpHandler {
                 h.append("</div></div>");
             }
 
-            h.append("<div style='margin-top:20px;padding:20px;background:var(--bg-subtle);border:1.5px solid var(--border-rule);border-radius:2px;text-align:center;' class='anim-on-scroll'>");
-            h.append("<span style='font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--text-primary);'>TOTAL OUTSTANDING DEBT BALANCE</span><br>");
+            h.append("<div style='margin-top:20px;padding:20px;background:var(--bg-subtle);border:1px solid #e0e0e0;border-radius:8px;text-align:center;' class='anim-on-scroll'>");
+            h.append("<span style='font-size:11px;font-weight:700;color:var(--text-primary);'>Total Outstanding Debt</span><br>");
             h.append("<strong style='font-size:28px;font-weight:900;color:var(--debt-val);letter-spacing:-0.5px;font-variant-numeric:tabular-nums;' class='count-up' data-target='").append((long)totalRemaining).append("'>&#8358;0.00</strong>");
             h.append("</div>");
         }

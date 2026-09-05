@@ -4,14 +4,13 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import commands.CommandHandler;
 import database.*;
-import model.*;
-import parser.MessageParser;
-import parser.ParseResult;
-
 import java.io.*;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
+import model.*;
+import parser.MessageParser;
+import parser.ParseResult;
 
 public class ApiHandler implements HttpHandler {
 
@@ -81,6 +80,7 @@ public class ApiHandler implements HttpHandler {
 
         sendJson(exchange, 200, json);
     }
+    
 
     private void handleConfirm(HttpExchange exchange, Map<String, String> params, User user) throws IOException {
         String typeStr = params.getOrDefault("type", "");

@@ -4,13 +4,11 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import database.TransactionDAO;
 import database.UserDAO;
-import model.*;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
+import model.*;
 
 public class AnalysisHandler implements HttpHandler {
 
@@ -88,12 +86,12 @@ public class AnalysisHandler implements HttpHandler {
 
         // Get period totals
         double sales = transactionDAO.getPeriodTotal(uid, TransactionType.SALE, from, to);
-        double expenses = transactionDAO.getPeriodTotal(uid, TransactionType.EXPENSE, from, to);
-        double supplies = transactionDAO.getPeriodTotal(uid, TransactionType.SUPPLY, from, to);
-        double debts = transactionDAO.getPeriodTotal(uid, TransactionType.DEBT, from, to);
-        double payments = transactionDAO.getPeriodTotal(uid, TransactionType.PAYMENT, from, to);
-        double profit = sales - expenses - supplies;
-
+double expenses = transactionDAO.getPeriodTotal(uid, TransactionType.EXPENSE, from, to);
+double supplies = transactionDAO.getPeriodTotal(uid, TransactionType.SUPPLY, from, to);
+double debts = transactionDAO.getPeriodTotal(uid, TransactionType.DEBT, from, to);
+double payments = transactionDAO.getPeriodTotal(uid, TransactionType.PAYMENT, from, to);
+double personal = transactionDAO.getPeriodTotal(uid, TransactionType.PERSONAL, from, to);
+double profit = sales - expenses - supplies;
         // Get daily breakdowns for chart
         LinkedHashMap<String, Double> dailySales = transactionDAO.getDailyTotals(uid, TransactionType.SALE, from, to);
         LinkedHashMap<String, Double> dailyExpenses = transactionDAO.getDailyTotals(uid, TransactionType.EXPENSE, from, to);
@@ -380,4 +378,5 @@ public class AnalysisHandler implements HttpHandler {
         os.write(bytes);
         os.close();
     }
+    
 }
