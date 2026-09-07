@@ -49,7 +49,8 @@ public class AuthHandler implements HttpHandler {
         if (user != null) {
             int txnCount = transactionDAO.getAllByUser(user.getId()).size();
             String welcomeFlag = txnCount == 0 ? "new" : "back";
-            exchange.getResponseHeaders().set("Location", "/dashboard/" + user.getDashboardToken() + "?welcome=" + welcomeFlag);
+            exchange.getResponseHeaders().set("Location",
+                    "/dashboard/" + user.getDashboardToken() + "?welcome=" + welcomeFlag);
             exchange.sendResponseHeaders(302, -1);
         } else {
             sendPage(exchange, loginPage("Invalid username or password.", false));
@@ -76,98 +77,83 @@ public class AuthHandler implements HttpHandler {
     }
 
     private String loginPage(String error, boolean justRegistered) {
-        String page = authPage("Login", "/auth/login", "Login", "/auth/signup", "Don't have an account? Sign up", error);
+        String page = authPage("Login", "/auth/login", "Login", "/auth/signup", "Don't have an account? Sign up",
+                error);
         if (justRegistered) {
             String toastScript = "<script>document.addEventListener('DOMContentLoaded',function(){" +
-                "var t=document.createElement('div');" +
-                "t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;padding:14px 28px;border-radius:8px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:all 0.5s ease;box-shadow:0 6px 20px rgba(37,99,235,0.3);max-width:90%;text-align:center;';" +
-                "t.textContent='Account created successfully! Please log in.';" +
-                "document.body.appendChild(t);" +
-                "setTimeout(function(){t.style.opacity=1;t.style.transform='translateX(-50%) translateY(0)';},100);" +
-                "setTimeout(function(){t.style.opacity=0;t.style.transform='translateX(-50%) translateY(-20px)';setTimeout(function(){t.remove();},500);},4000);" +
-                "});</script>";
+                    "var t=document.createElement('div');" +
+                    "t.style.cssText='position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-20px);background:#1f2937;border-left:4px solid #166534;color:#fff;padding:14px 24px;border-radius:8px;font-size:14px;font-weight:500;z-index:9999;opacity:0;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);max-width:90%;display:flex;align-items:center;text-align:left;';"
+                    + "t.textContent='Account created successfully! Please log in.';" +
+                    "document.body.appendChild(t);" +
+                    "setTimeout(function(){t.style.opacity=1;t.style.transform='translateX(-50%) translateY(0)';},100);"
+                    +
+                    "setTimeout(function(){t.style.opacity=0;t.style.transform='translateX(-50%) translateY(-20px)';setTimeout(function(){t.remove();},500);},4000);"
+                    +
+                    "});</script>";
             page = page.replace("</body>", toastScript + "</body>");
         }
         return page;
     }
 
     private String signupPage(String error) {
-        return authPage("Sign Up", "/auth/signup", "Create Account", "/auth/login", "Already have an account? Login", error);
+        return authPage("Sign Up", "/auth/signup", "Create Account", "/auth/login", "Already have an account? Login",
+                error);
     }
 
     private String authPage(String title, String action, String btnText, String altLink, String altText, String error) {
         StringBuilder h = new StringBuilder();
-        h.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
-        h.append("<meta name='viewport' content='width=device-width,initial-scale=1.0'>");
-        h.append("<title>SmartLedger - " + title + "</title>");
-        h.append("<link rel='icon' type='image/png' href='" + HtmlTemplates.LOGO_DATA + "'>");
-        h.append("<link rel='preconnect' href='https://fonts.googleapis.com'>");
-        h.append("<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>");
-        h.append("<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap' rel='stylesheet'>");
-        h.append("<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css'>");
-        h.append("<style>");
-        h.append("*{margin:0;padding:0;box-sizing:border-box;}");
-        h.append(":root{--bg-canvas:#e8ecf1;--border-rule:#c5cdd8;--border-light:#b0b8c4;--text-primary:#1a1a2e;--text-secondary:#2c3e50;--text-muted:#5b6f84;--brand-primary:#2563eb;--brand-dark:#1d4ed8;--brand-light:#dbeafe;--expense-val:#1d4ed8;}");
-        h.append("body{font-family:'Inter',sans-serif;background:var(--bg-canvas);color:var(--text-primary);min-height:100vh;}");
-        h.append(".auth-card{background:#ffffff;border:1px solid var(--border-rule);border-radius:8px;padding:36px 32px;width:100%;max-width:400px;}");
-        h.append(".auth-card h1{font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.3px;}");
-        h.append(".auth-card .sub{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}");
-        h.append(".auth-input{width:100%;padding:10px 14px;border:1px solid var(--border-rule);border-radius:6px;font-size:13px;font-weight:500;background:#ffffff;color:var(--text-primary);outline:none;transition:border 0.2s;}");
-        h.append(".auth-input:focus{border-color:var(--brand-primary);}");
-        h.append(".auth-label{font-size:11px;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.3px;}");
-        h.append(".auth-btn{width:100%;padding:12px;background:var(--brand-primary);color:#fff;border:1px solid var(--brand-primary);border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:background 0.2s;}");
-        h.append(".auth-btn:hover{background:var(--brand-dark);}");
-        h.append(".auth-error{background:#fee2e2;color:#dc2626;border:1px solid #dc2626;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}");
-        h.append(".auth-alt{text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-rule);font-size:12px;font-weight:600;}");
-        h.append(".auth-alt a{color:var(--brand-primary);text-decoration:none;}");
-        h.append(".auth-alt a:hover{text-decoration:underline;}");
-        h.append(".logo-wrap{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#ffffff;border:1px solid var(--border-rule);border-radius:50%;margin-bottom:10px;}");
-        h.append(".logo-wrap img{width:26px;height:26px;}");
-        h.append("</style></head><body>");
-        
-        h.append("<div style='min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;'>");
-        h.append("<div class='auth-card'>");
-        
-        // Logo & Title
-        h.append("<div style='text-align:center;margin-bottom:24px;border-bottom:1px solid var(--border-rule);padding-bottom:18px;'>");
-        h.append("<div class='logo-wrap'><img src='").append(HtmlTemplates.LOGO_DATA).append("' alt='Logo'></div>");
-        h.append("<h1>SmartLedger</h1>");
-        h.append("<p class='sub'>Merchant Accounting · COS 202</p>");
-        h.append("</div>");
+        h.append(HtmlTemplates.head(title));
+        h.append(
+                "<div style='min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;'>");
+        h.append(
+                "<div style='background:#ffffff;border:1px solid var(--border-rule);border-radius:10px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 1px 2px 0 rgba(0,0,0,0.05);'>");
+        h.append(
+                "<div style='text-align:center;margin-bottom:24px;border-bottom:1px solid var(--border-rule);padding-bottom:18px;'>");
+        h.append(
+                "<div style='display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:#ffffff;border:1px solid var(--border-rule);border-radius:10px;margin-bottom:10px;'><img src='")
+                .append(HtmlTemplates.LOGO_DATA).append("' style='width:26px;height:26px;' alt='Logo'></div>");
+        h.append(
+                "<h1 style='color:var(--text-primary);font-size:18px;font-weight:700;'>SmartLedger</h1>");
+        h.append(
+                "<p style='color:var(--text-secondary);font-size:12px;font-weight:500;margin-top:4px;'>Merchant Accounting &middot; COS 202</p></div>");
 
-        // Error
         if (error != null) {
-            h.append("<div class='auth-error'><i class='ti ti-alert-circle'></i> ").append(HtmlTemplates.escapeHtml(error)).append("</div>");
+            h.append(
+                    "<div style='background:#fee2e2;color:var(--expense-val);border:1px solid #fca5a5;border-radius:6px;padding:10px 14px;margin-bottom:20px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;'>")
+                    .append("<i class='ti ti-alert-circle'></i> ").append(HtmlTemplates.escapeHtml(error))
+                    .append("</div>");
         }
 
-        // Form
         h.append("<form method='POST' action='").append(action).append("'>");
-        h.append("<div style='margin-bottom:14px;'>");
-        h.append("<label class='auth-label'>Username</label>");
-        h.append("<input class='auth-input' name='username' type='text' required placeholder='Enter your username'>");
-        h.append("</div>");
-        
-        h.append("<div style='margin-bottom:14px;'>");
-        h.append("<label class='auth-label'>Password</label>");
-        h.append("<input class='auth-input' name='password' type='password' required placeholder='••••••••'>");
-        h.append("</div>");
-        
+        h.append(
+                "<div style='margin-bottom:16px;'><label style='font-size:13px;color:var(--text-primary);font-weight:600;display:block;margin-bottom:6px;'>Username</label>");
+        h.append(
+                "<input name='username' type='text' required placeholder='Enter your username' style='width:100%;padding:10px 14px;border:1px solid var(--border-rule);border-radius:6px;font-size:14px;font-weight:400;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+
+        h.append(
+                "<div style='margin-bottom:16px;'><label style='font-size:13px;color:var(--text-primary);font-weight:600;display:block;margin-bottom:6px;'>Password</label>");
+        h.append(
+                "<input name='password' type='password' required placeholder='••••••••' style='width:100%;padding:10px 14px;border:1px solid var(--border-rule);border-radius:6px;font-size:14px;font-weight:400;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
+
         if (action.contains("signup")) {
-            h.append("<div style='margin-bottom:16px;'>");
-            h.append("<label class='auth-label'>Business Name <span style='color:var(--text-muted);font-weight:400;'>(Optional)</span></label>");
-            h.append("<input class='auth-input' name='business_name' type='text' placeholder='e.g. Mama Tope Provisions'>");
-            h.append("</div>");
+            h.append(
+                    "<div style='margin-bottom:16px;'><label style='font-size:13px;color:var(--text-primary);font-weight:600;display:block;margin-bottom:6px;'>Business Name <span style='color:var(--text-muted);font-weight:400;'>(optional)</span></label>");
+            h.append(
+                    "<input name='business_name' type='text' placeholder='e.g. Mama Tope Provisions' style='width:100%;padding:10px 14px;border:1px solid var(--border-rule);border-radius:6px;font-size:14px;font-weight:400;background:#ffffff;color:var(--text-primary);outline:none;'></div>");
         }
-        
-        h.append("<button class='auth-btn' type='submit'>").append(btnText).append("</button>");
+        h.append("<div style='height:6px;'></div>");
+        h.append(
+                "<button type='submit' style='width:100%;padding:14px;background:#166534;color:#ffffff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:0.3px;'>")
+                .append(btnText).append("</button>");
         h.append("</form>");
 
-        h.append("<div class='auth-alt'>");
-        h.append("<a href='").append(altLink).append("'>").append(altText).append("</a>");
-        h.append("</div>");
+        h.append(
+                "<div style='text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #f3f4f6;font-size:13px;font-weight:500;'>");
+        h.append("<a href='").append(altLink).append("' style='color:#166534;text-decoration:none;font-weight:600;'>")
+                .append(altText).append("</a></div>");
 
         h.append("</div></div>");
-        h.append("</body></html>");
+        h.append(HtmlTemplates.footer());
         return h.toString();
     }
 
@@ -176,12 +162,12 @@ public class AuthHandler implements HttpHandler {
         BufferedReader br = new BufferedReader(new InputStreamReader(exchange.getRequestBody(), "UTF-8"));
         StringBuilder sb = new StringBuilder();
         String line;
-        while ((line = br.readLine()) != null) sb.append(line);
+        while ((line = br.readLine()) != null)
+            sb.append(line);
         for (String pair : sb.toString().split("&")) {
             String[] kv = pair.split("=", 2);
-            if (kv.length == 2) {
+            if (kv.length == 2)
                 params.put(URLDecoder.decode(kv[0], "UTF-8"), URLDecoder.decode(kv[1], "UTF-8"));
-            }
         }
         return params;
     }

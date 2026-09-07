@@ -58,9 +58,8 @@ public class DashboardHandler implements HttpHandler {
         double debts = transactionDAO.getTotalByType(uid, TransactionType.DEBT);
         double payments = transactionDAO.getTotalByType(uid, TransactionType.PAYMENT);
         double deliveries = transactionDAO.getTotalByType(uid, TransactionType.DELIVERY);
-        double personal = transactionDAO.getTotalByType(uid, TransactionType.PERSONAL);
-        double profit = sales - expenses - supplies;
-
+       double personal = transactionDAO.getTotalByType(uid, TransactionType.PERSONAL);
+double profit = sales - expenses - supplies;
         double todaySales = transactionDAO.getTodayTotalByType(uid, TransactionType.SALE);
         double todayExpenses = transactionDAO.getTodayTotalByType(uid, TransactionType.EXPENSE);
         double todaySupplies = transactionDAO.getTodayTotalByType(uid, TransactionType.SUPPLY);
@@ -82,48 +81,47 @@ public class DashboardHandler implements HttpHandler {
         // Streak
         h.append(HtmlTemplates.streakBanner(streak));
 
-        // Today's Activity Carousel (updated with brand colors)
+        // Today's Activity Carousel
         h.append("<div class='carousel'><div class='carousel-track' id='carouselTrack'>");
-        h.append("<div class='carousel-slide'><h3>Today's Sales</h3><div class='big-num' style='color:var(--brand-primary);'>&#8358;").append(HtmlTemplates.formatAmount(todaySales)).append("</div></div>");
-        h.append("<div class='carousel-slide'><h3>Today's Expenses</h3><div class='big-num' style='color:var(--expense-val);'>&#8358;").append(HtmlTemplates.formatAmount(todayExpenses)).append("</div></div>");
-        h.append("<div class='carousel-slide'><h3>Today's Supplies</h3><div class='big-num' style='color:var(--supply-val);'>&#8358;").append(HtmlTemplates.formatAmount(todaySupplies)).append("</div></div>");
+        h.append("<div class='carousel-slide'><h3>Today's Sales</h3><div class='big-num' style='color:#2e7d32;'>&#8358;").append(HtmlTemplates.formatAmount(todaySales)).append("</div></div>");
+        h.append("<div class='carousel-slide'><h3>Today's Expenses</h3><div class='big-num' style='color:#c62828;'>&#8358;").append(HtmlTemplates.formatAmount(todayExpenses)).append("</div></div>");
+        h.append("<div class='carousel-slide'><h3>Today's Supplies</h3><div class='big-num' style='color:#e65100;'>&#8358;").append(HtmlTemplates.formatAmount(todaySupplies)).append("</div></div>");
         h.append("</div><div class='carousel-dots'><span class='active' onclick='goSlide(0)'></span><span onclick='goSlide(1)'></span><span onclick='goSlide(2)'></span></div></div>");
         h.append("<script>var ci=0;function goSlide(i){ci=i;document.getElementById('carouselTrack').style.transform='translateX(-'+i*100+'%)';");
         h.append("document.querySelectorAll('.carousel-dots span').forEach(function(d,j){d.className=j===i?'active':'';});}")
         .append("setInterval(function(){goSlide((ci+1)%3);},4000);</script>");
 
-        // ================================================================
-        // ✅ NEW: All-time summary in a single vertical card
-        // ================================================================
-        h.append("<div class='metric-card anim-on-scroll'>");
-        h.append(HtmlTemplates.metricList("Total Sales", sales, "sales", false));
-        h.append(HtmlTemplates.metricList("Total Expenses", expenses, "expenses", false));
-        h.append(HtmlTemplates.metricList("Total Supplies", supplies, "supplies", false));
-        h.append(HtmlTemplates.metricList("Debts Owed", debts, "debts", false));
-        h.append(HtmlTemplates.metricList("Payments In", payments, "payments", false));
-        h.append(HtmlTemplates.metricList("Deliveries", deliveries, "deliveries", false));
-        h.append(HtmlTemplates.metricList("Personal Drawings", personal, "personal", false));
-        String profitClass = profit >= 0 ? "positive" : "negative";
-        h.append(HtmlTemplates.metricList("Net Margin / Profit", profit, profitClass, false));
+        // All-time summary
+        h.append("<div class='cards stagger-children'>");
+        h.append(HtmlTemplates.card("Total Sales", sales, "sales"));
+        h.append(HtmlTemplates.card("Total Expenses", expenses, "expenses"));
+        h.append(HtmlTemplates.card("Total Supplies", supplies, "supplies"));
+        h.append(HtmlTemplates.card("Debts Owed", debts, "debts"));
+        h.append(HtmlTemplates.card("Payments In", payments, "payments"));
+        h.append(HtmlTemplates.card("Deliveries", deliveries, "deliveries"));
+        String profitClass = profit >= 0 ? "profit" : "profit negative";
+        h.append("<div class='card ").append(profitClass).append(" anim-on-scroll'>");
+        h.append("<div class='card-header'><span class='card-label'>Net Margin / Profit</span></div>");
+        h.append("<div class='value'>&#8358;").append(HtmlTemplates.formatAmount(profit)).append("</div></div>");
         h.append("</div>");
 
         // Charts
-        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-bar' style='color:var(--brand-primary);'></i> PERFORMANCE FLOW</h2>");
+        h.append("<div class='section anim-on-scroll'><h2>Performance Flow</h2>");
         h.append(HtmlTemplates.barChart(sales, expenses, supplies, debts, payments));
         h.append("</div>");
-        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-chart-pie' style='color:var(--brand-primary);'></i> REVENUE & OUTFLOW RATIO</h2>");
+        h.append("<div class='section anim-on-scroll'><h2>Revenue &amp; Outflow Ratio</h2>");
         h.append(HtmlTemplates.pieChart(sales, expenses, supplies));
         h.append("</div>");
 
         // Recent transactions
-        h.append("<div class='section anim-on-scroll'><h2><i class='ti ti-history' style='color:var(--brand-primary);'></i> RECENT POSTED TRANSACTIONS</h2>");
+        h.append("<div class='section anim-on-scroll'><h2>Recent Transactions</h2>");
         if (recent.isEmpty()) {
             h.append("" + HtmlTemplates.emptyState("No transactions recorded yet today.", "Record Entry", "/chat/" + token) + "");
         } else {
             h.append(transactionTable(recent, false, token));
         }
         h.append("<div style='margin-top:16px;'><a href='/dashboard/").append(token)
-         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-list'></i> VIEW FULL TRANSACTION LEDGER</a></div>");
+         .append("/transactions' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-list'></i> View All Transactions</a></div>");
         h.append("</div>");
 
         h.append("</div>");
@@ -180,12 +178,13 @@ public class DashboardHandler implements HttpHandler {
         h.append(HtmlTemplates.fullNav(token, "transactions", user.getBusinessName()));
         h.append("<div class='container'>");
 
-        // Category tabs (including PERSONAL)
+        // Category tabs
         h.append("<div class='cat-tabs'>");
-        String[] tabs = {"ALL", "SALE", "EXPENSE", "SUPPLY", "DEBT", "PAYMENT", "DELIVERY", "PERSONAL"};
+        String[] tabs = {"ALL", "SALE", "EXPENSE", "SUPPLY", "DEBT", "PAYMENT", "DELIVERY"};
         for (String tab : tabs) {
             String active = (tab.equals(typeFilter) || (tab.equals("ALL") && (typeFilter == null || typeFilter.equals("ALL")))) ? " active t-" + tab : " t-" + tab;
             String href = tab.equals("ALL") ? "/dashboard/" + token + "/transactions" : "/dashboard/" + token + "/transactions?type=" + tab;
+            // fromDate/toDate come straight from the URL query string - escape before writing into an href attribute
             if (fromDate != null && !fromDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "from=" + HtmlTemplates.escapeHtml(fromDate);
             if (toDate != null && !toDate.isEmpty()) href += (href.contains("?") ? "&" : "?") + "to=" + HtmlTemplates.escapeHtml(toDate);
             h.append("<a href='").append(href).append("' class='cat-tab").append(active).append("'>").append(tab).append("</a>");
@@ -194,6 +193,8 @@ public class DashboardHandler implements HttpHandler {
 
         // Date filter
         h.append("<form class='filter-bar' method='GET' action='/dashboard/").append(token).append("/transactions'>");
+        // type/from/to are user-controlled (URL query string) - must be escaped before landing in an HTML attribute,
+        // otherwise ?type='><script>...</script> breaks out of the value='' attribute and runs in the trader's session
         if (typeFilter != null && !typeFilter.equals("ALL")) h.append("<input type='hidden' name='type' value='").append(HtmlTemplates.escapeHtml(typeFilter)).append("'>");
         h.append("<input type='date' name='from' value='").append(HtmlTemplates.escapeHtml(fromDate != null ? fromDate : "")).append("' placeholder='From'>");
         h.append("<input type='date' name='to' value='").append(HtmlTemplates.escapeHtml(toDate != null ? toDate : "")).append("' placeholder='To'>");
@@ -203,10 +204,10 @@ public class DashboardHandler implements HttpHandler {
 
         // Report button + View toggle
         h.append("<div style='margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;'>");
-        h.append("<a href='/report/").append(token).append("' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-file-analytics'></i> STATEMENT &amp; AUDIT</a>");
+        h.append("<a href='/report/").append(token).append("' class='btn btn-primary' style='text-decoration:none;'><i class='ti ti-file-analytics'></i> Statement &amp; Audit</a>");
         h.append("<div style='display:flex;gap:4px;'>");
-        h.append("<button class='btn' id='cardViewBtn' onclick='showCards()' style='background:var(--brand-primary);color:#fff;'>CARDS</button>");
-        h.append("<button class='btn' id='tableViewBtn' onclick='showTable()' style='background:#ffffff;color:var(--text-primary);'>TABLE</button>");
+        h.append("<button class='btn' id='cardViewBtn' onclick='showCards()' style='background:var(--brand-primary);color:#fff;'>Cards</button>");
+        h.append("<button class='btn' id='tableViewBtn' onclick='showTable()' style='background:#ffffff;color:var(--text-primary);'>Table</button>");
         h.append("</div></div>");
 
         if (transactions.isEmpty()) {
@@ -232,14 +233,14 @@ public class DashboardHandler implements HttpHandler {
                     h.append("<option value='").append(type.name()).append("'").append(sel).append(">").append(type.name()).append("</option>");
                 }
                 h.append("</select>");
-                h.append("<button class='btn btn-danger' onclick='deleteTxn(").append(txn.getId()).append(")'>DELETE</button>");
+                h.append("<button class='btn btn-danger' onclick='deleteTxn(").append(txn.getId()).append(")'>Delete</button>");
                 h.append("</div></div></div>");
             }
             h.append("</div>");
 
             // Table view (hidden by default)
             h.append("<div id='tableView' style='display:none;'>");
-            h.append("<table><tr><th>TYPE</th><th>AMOUNT</th><th>DESCRIPTION</th><th>COUNTERPARTY</th><th>DATE</th></tr>");
+            h.append("<table><tr><th>Type</th><th>Amount</th><th>Description</th><th>Counterparty</th><th>Date</th></tr>");
             for (Transaction txn : transactions) {
                 h.append("<tr class='row-type-").append(txn.getType().name()).append("' id='trow-").append(txn.getId()).append("'>");
                 h.append("<td>").append(HtmlTemplates.badge(txn.getType().name())).append("</td>");
@@ -277,7 +278,7 @@ public class DashboardHandler implements HttpHandler {
         h.append(HtmlTemplates.fullNav(token, "debts", user.getBusinessName()));
         h.append("<div class='container'>");
 
-        h.append("<div class='section'><h2><i class='ti ti-scale' style='color:var(--brand-primary);'></i> DEBTOR &amp; CREDIT LEDGER</h2>");
+        h.append("<div class='section'><h2>Debtor &amp; Credit Ledger</h2>");
 
         if (debtSummary.isEmpty()) {
             h.append(HtmlTemplates.emptyState("No active debtor positions recorded.", "Record Debt", "/chat/" + token));
